@@ -21,9 +21,12 @@ services:
     build: .
     container_name: carparts_api
     restart: always
+    env_file:
+      - .env
     ports:
       - "3001:3000"
     environment:
+      # Overrides host .env so the container talks to Postgres on the Compose network.
       DATABASE_URL: postgresql://admin:password123@db:5432/carparts_db
       PORT: "3000"
     depends_on:
