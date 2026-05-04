@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  nameEn    String
+  nameAr    String
+  slug      String     @unique
+  parentId  Int?
+  imageUrl  String?    // Changed to optional and camelCase
+  parent    Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children  Category[] @relation("SubCategories")
+  products  Product[]
+}
+
+model Product {
+  id             String         @id @default(uuid())
+  sku            String         @unique
+  slug           String         @unique // ADDED: Critical for SEO (e.g. bmw-e60-brake-pads)
+  oemNumber      String?         // Added Index for faster search
+  vinNumber      String?        // Fixed typo from 'vim' to 'vin'
+  brand          String         // e.g. BMW, Mercedes
+  year           Int?           // Changed to optional just in case
+  nameEn         String
+  nameAr         String
+  descEn         String?
+  descAr         String?
+  compatibility  String?        // Fits E60, E61, etc.
+  isFeatured     Boolean        @default(false) // Added default
+  manufacturedIn String?
+  price          Decimal        @db.Decimal(10, 2)
+  discountPrice  Decimal?       @db.Decimal(10, 2)
+  dimensions     String?        // Changed from Int to String (e.g. "30x20x10")
+  stockQuantity  Int            @default(0)
+  condition      String         @default("NEW") // NEW, USED
+  weight         Float?
+  tags           String[]       // Your filtering system
+  isActive       Boolean        @default(true) // Added default
+  categoryId     Int
+  category       Category       @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+   @@index([oemNumber]) 
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  url       String
+  isMain    Boolean @default(false)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
