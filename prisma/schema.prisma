@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 1. Admins Table
 model Admin {
   id           String   @id @default(uuid())
   username     String   @unique
@@ -14,54 +15,75 @@ model Admin {
   createdAt    DateTime @default(now())
 }
 
+// 2. Categories Table
 model Category {
   id        Int        @id @default(autoincrement())
+  parentId  Int?
   nameEn    String
   nameAr    String
   slug      String     @unique
-  parentId  Int?
-  imageUrl  String?    // Changed to optional and camelCase
   parent    Category?  @relation("SubCategories", fields: [parentId], references: [id])
   children  Category[] @relation("SubCategories")
   products  Product[]
 }
 
+// 3. Products Table
 model Product {
   id             String         @id @default(uuid())
   sku            String         @unique
-  slug           String         @unique // ADDED: Critical for SEO (e.g. bmw-e60-brake-pads)
-  oemNumber      String?         // Added Index for faster search
-  vinNumber      String?        // Fixed typo from 'vim' to 'vin'
-  brand          String         // e.g. BMW, Mercedes
-  year           Int?           // Changed to optional just in case
+  oemNumber      String?        
+  categoryId     Int
+  brandName      String         // e.g., Bosch, Genuine
   nameEn         String
   nameAr         String
   descEn         String?
   descAr         String?
-  compatibility  String?        // Fits E60, E61, etc.
-  isFeatured     Boolean        @default(false) // Added default
-  manufacturedIn String?
   price          Decimal        @db.Decimal(10, 2)
-  discountPrice  Decimal?       @db.Decimal(10, 2)
-  dimensions     String?        // Changed from Int to String (e.g. "30x20x10")
   stockQuantity  Int            @default(0)
-  condition      String         @default("NEW") // NEW, USED
+  isFeatured     Boolean        @default(false)
+  isActive       Boolean        @default(true)
+  dimensions     String?
   weight         Float?
-  tags           String[]       // Your filtering system
-  isActive       Boolean        @default(true) // Added default
-  categoryId     Int
-  category       Category       @relation(fields: [categoryId], references: [id])
-  images         ProductImage[]
+  manufacturedIn String?
+  condition      String         @default("new") // new, used
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  
+  category       Category       @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  fitments       Fitment[]      // Bridge to Vehicles
+  
 
-   @@index([oemNumber]) 
+  @@index([oemNumber])
 }
 
+// 4. Product Images Table
 model ProductImage {
   id        String  @id @default(uuid())
   url       String
   isMain    Boolean @default(false)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// 5. Vehicles Table (The Car Library)
+model Vehicle {
+  id          Int       @id @default(autoincrement())
+  brand       String    // e.g., BMW
+  series      String    // e.g., 5 Series
+  specifics   String    // e.g., 530i
+  chassisCode String    // e.g., E60
+  yearRange   String    // e.g., 2004-2010
+  fitments    Fitment[] // Bridge to Products
+}
+
+// 6. Fitments Table (The Bridge / Pivot Table)
+model Fitment {
+  id        Int     @id @default(autoincrement())
+  productId String
+  vehicleId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, vehicleId]) // Prevents duplicate fitment entries
 }

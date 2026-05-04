@@ -11,6 +11,25 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d carparts_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: carparts_api
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://admin:password123@db:5432/carparts_db
+      PORT: "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
 
 volumes:
   postgres_data:
