@@ -1,0 +1,1 @@
+{"version":3,"file":"runtime.js","sourceRoot":"","sources":["../../src/config/runtime.ts"],"names":[],"mappings":"AAQA,IAAI,WAAoC,CAAC;AAEzC,MAAM,UAAU,oBAAoB,CAAC,IAAiB;IACpD,WAAW,GAAG,IAAI,CAAC;AACrB,CAAC;AAED,MAAM,UAAU,cAAc;IAC5B,IAAI,CAAC,WAAW,EAAE,CAAC;QACjB,MAAM,IAAI,KAAK,CAAC,qFAAqF,CAAC,CAAC;IACzG,CAAC;IACD,OAAO,WAAW,CAAC;AACrB,CAAC"}

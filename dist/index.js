@@ -1,12 +1,15 @@
 //This file is used to create the server and listen on the port
 //we are importing the dotenv config to load the environment variables from the .env file
 import "dotenv/config";
+import { mkdirSync } from "node:fs";
 //we are importing the cors to handle the cors errors, cors errors are errors that are caused by the cors policy which is a security feature that is used to prevent cross-origin requests
 import cors from "cors";
 //we are importing the express to create the server
 import express from "express";
 //we are importing the getAuthEnv to get the authentication environment variables
 import { getAuthEnv } from "./config/env.js";
+import { configureProductDeps } from "./config/runtime.js";
+import { createStorageAdapter, getStorageEnv } from "./config/storage.js";
 //we are importing the createAdminRouter to create the admin routes
 import { createAdminRouter } from "./routes/admin.routes.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
@@ -17,10 +20,15 @@ const app = express();
 const port = Number(process.env.PORT) || 3000;
 //we are getting the authentication environment variables
 const authEnv = getAuthEnv();
+const storageEnv = getStorageEnv();
+const storageAdapter = createStorageAdapter(storageEnv);
+configureProductDeps({ storageEnv, storage: storageAdapter });
+mkdirSync(storageEnv.uploadRootDir, { recursive: true });
 //we are using the cors middleware to handle the cors errors
 app.use(cors());
 //we are using the express.json middleware to parse the request body
 app.use(express.json());
+app.use(storageEnv.publicMountPath, express.static(storageEnv.uploadRootDir));
 //we are creating the health route to check if the server is running
 app.get("/health", (_req, res) => {
     res.json({ ok: true });
