@@ -12,6 +12,7 @@ import { getAuthEnv } from "./config/env.js";
 //we are importing the createAdminRouter to create the admin routes
 import { createAdminRouter } from "./routes/admin.routes.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
+import { createCatalogRouter } from "./routes/catalog.routes.js";
 
 
 //we are creating the express server
@@ -32,6 +33,7 @@ app.get("/health", (_req, res) => {
 });
 //Here the app.use is used to call the createAuthRouter and createAdminRouter functions to create the auth and admin routes
 app.use("/api/auth", createAuthRouter(authEnv));
+app.use("/api", createCatalogRouter());
 app.use("/api/admin", createAdminRouter(authEnv));
 
 app.use(

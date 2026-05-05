@@ -1,0 +1,45 @@
+import { z } from "zod";
+
+const idParam = z.coerce
+  .number()
+  .int()
+  .positive();
+
+export const vehicleIdParamsSchema = z.object({
+  id: idParam,
+});
+
+export const createVehicleBodySchema = z.object({
+  brand: z.string().trim().min(1).max(128),
+  series: z.string().trim().min(1).max(128),
+  specifics: z.string().trim().min(1).max(128),
+  chassisCode: z.string().trim().min(1).max(64),
+  yearRange: z.string().trim().min(1).max(64),
+});
+
+export const updateVehicleBodySchema = z
+  .object({
+    brand: z.string().trim().min(1).max(128).optional(),
+    series: z.string().trim().min(1).max(128).optional(),
+    specifics: z.string().trim().min(1).max(128).optional(),
+    chassisCode: z.string().trim().min(1).max(64).optional(),
+    yearRange: z.string().trim().min(1).max(64).optional(),
+  })
+  .refine(
+    (o) =>
+      o.brand !== undefined ||
+      o.series !== undefined ||
+      o.specifics !== undefined ||
+      o.chassisCode !== undefined ||
+      o.yearRange !== undefined,
+    { message: "At least one field is required" },
+  );
+
+export type CreateVehicleBody = z.infer<typeof createVehicleBodySchema>;
+export type UpdateVehicleBody = z.infer<typeof updateVehicleBodySchema>;
+
+export const vehicleListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  brand: z.string().trim().max(128).optional(),
+});
