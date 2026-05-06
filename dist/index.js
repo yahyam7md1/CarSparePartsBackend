@@ -10,10 +10,11 @@ import express from "express";
 import { getAuthEnv } from "./config/env.js";
 import { configureProductDeps } from "./config/runtime.js";
 import { createStorageAdapter, getStorageEnv } from "./config/storage.js";
-//we are importing the createAdminRouter to create the admin routes
+import { errorHandler } from "./middleware/error.middleware.js";
 import { createAdminRouter } from "./routes/admin.routes.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
 import { createCatalogRouter } from "./routes/catalog.routes.js";
+import { createCheckoutRouter } from "./routes/checkout.routes.js";
 //we are creating the express server
 const app = express();
 //we are getting the port from the environment variables
@@ -36,14 +37,9 @@ app.get("/health", (_req, res) => {
 //Here the app.use is used to call the createAuthRouter and createAdminRouter functions to create the auth and admin routes
 app.use("/api/auth", createAuthRouter(authEnv));
 app.use("/api", createCatalogRouter());
+app.use("/api", createCheckoutRouter());
 app.use("/api/admin", createAdminRouter(authEnv));
-app.use((err, _req, res, _next) => {
-    console.error(err);
-    if (res.headersSent) {
-        return;
-    }
-    res.status(500).json({ error: "Internal server error" });
-});
+app.use(errorHandler);
 //we are listening on the port and the host is 0.0.0.0, the reason why we are using 0.0.0.0 is because we want to listen on all interfaces
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server listening on http://0.0.0.0:${port}`);
