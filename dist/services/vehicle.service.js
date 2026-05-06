@@ -23,6 +23,8 @@ export async function getVehicle(id) {
 }
 export async function createVehicle(input) {
     return vehicleRepository.createVehicle({
+        nameEn: (input.nameEn ?? "").trim(),
+        nameAr: (input.nameAr ?? "").trim(),
         brand: input.brand.trim(),
         series: input.series.trim(),
         specifics: input.specifics.trim(),
@@ -33,6 +35,12 @@ export async function createVehicle(input) {
 export async function updateVehicle(id, input) {
     await getVehicle(id);
     const data = {};
+    if (input.nameEn !== undefined) {
+        data.nameEn = input.nameEn.trim();
+    }
+    if (input.nameAr !== undefined) {
+        data.nameAr = input.nameAr.trim();
+    }
     if (input.brand !== undefined) {
         data.brand = input.brand.trim();
     }

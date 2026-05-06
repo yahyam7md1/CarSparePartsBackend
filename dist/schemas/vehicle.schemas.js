@@ -7,6 +7,8 @@ export const vehicleIdParamsSchema = z.object({
     id: idParam,
 });
 export const createVehicleBodySchema = z.object({
+    nameEn: z.string().trim().max(256).optional(),
+    nameAr: z.string().trim().max(256).optional(),
     brand: z.string().trim().min(1).max(128),
     series: z.string().trim().min(1).max(128),
     specifics: z.string().trim().min(1).max(128),
@@ -15,13 +17,17 @@ export const createVehicleBodySchema = z.object({
 });
 export const updateVehicleBodySchema = z
     .object({
+    nameEn: z.string().trim().max(256).optional(),
+    nameAr: z.string().trim().max(256).optional(),
     brand: z.string().trim().min(1).max(128).optional(),
     series: z.string().trim().min(1).max(128).optional(),
     specifics: z.string().trim().min(1).max(128).optional(),
     chassisCode: z.string().trim().min(1).max(64).optional(),
     yearRange: z.string().trim().min(1).max(64).optional(),
 })
-    .refine((o) => o.brand !== undefined ||
+    .refine((o) => o.nameEn !== undefined ||
+    o.nameAr !== undefined ||
+    o.brand !== undefined ||
     o.series !== undefined ||
     o.specifics !== undefined ||
     o.chassisCode !== undefined ||

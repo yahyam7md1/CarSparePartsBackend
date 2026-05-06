@@ -30,6 +30,7 @@ declare function mapListRow(p: ProductAdminListRow): {
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 };
@@ -66,6 +67,8 @@ export declare function getProductAdmin(id: string): Promise<{
     fitments: ({
         vehicle: {
             id: number;
+            nameEn: string;
+            nameAr: string;
             brand: string;
             series: string;
             specifics: string;
@@ -93,6 +96,7 @@ export declare function getProductAdmin(id: string): Promise<{
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 }>;
@@ -112,6 +116,7 @@ export declare function createProduct(input: {
     dimensions?: string | null;
     weight?: number | null;
     manufacturedIn?: string | null;
+    generation?: string | null;
     condition?: "new" | "used";
 }): Promise<{
     price: string;
@@ -132,6 +137,8 @@ export declare function createProduct(input: {
     fitments: ({
         vehicle: {
             id: number;
+            nameEn: string;
+            nameAr: string;
             brand: string;
             series: string;
             specifics: string;
@@ -159,6 +166,7 @@ export declare function createProduct(input: {
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 }>;
@@ -178,6 +186,7 @@ export declare function updateProduct(id: string, input: {
     dimensions?: string | null;
     weight?: number | null;
     manufacturedIn?: string | null;
+    generation?: string | null;
     condition?: "new" | "used";
 }): Promise<{
     price: string;
@@ -198,6 +207,8 @@ export declare function updateProduct(id: string, input: {
     fitments: ({
         vehicle: {
             id: number;
+            nameEn: string;
+            nameAr: string;
             brand: string;
             series: string;
             specifics: string;
@@ -225,6 +236,7 @@ export declare function updateProduct(id: string, input: {
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 }>;
@@ -254,6 +266,8 @@ export declare function uploadProductImage(productId: string, file: {
     fitments: ({
         vehicle: {
             id: number;
+            nameEn: string;
+            nameAr: string;
             brand: string;
             series: string;
             specifics: string;
@@ -281,6 +295,7 @@ export declare function uploadProductImage(productId: string, file: {
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 }>;
@@ -305,6 +320,8 @@ export declare function patchInventory(id: string, stockQuantity: number): Promi
     fitments: ({
         vehicle: {
             id: number;
+            nameEn: string;
+            nameAr: string;
             brand: string;
             series: string;
             specifics: string;
@@ -332,6 +349,7 @@ export declare function patchInventory(id: string, stockQuantity: number): Promi
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 }>;
@@ -345,6 +363,9 @@ export declare function listProductsPublic(q: {
     page?: number;
     limit?: number;
     categoryId?: number;
+    categorySlug?: string;
+    vehicleId?: number;
+    oem?: string;
     q?: string;
 }): Promise<{
     products: {
@@ -378,12 +399,34 @@ export declare function listProductsPublic(q: {
         dimensions: string | null;
         weight: number | null;
         manufacturedIn: string | null;
+        generation: string | null;
         condition: string;
         updatedAt: Date;
     }[];
     total: number;
     page: number;
     limit: number;
+}>;
+export declare function listFeaturedProductsPublic(q: {
+    page?: number;
+    limit?: number;
+}): Promise<{
+    products: ReturnType<typeof mapListRow>[];
+    total: number;
+    page: number;
+    limit: number;
+}>;
+export declare function getProductFitmentsPublic(id: string): Promise<{
+    vehicles: {
+        id: number;
+        nameEn: string;
+        nameAr: string;
+        brand: string;
+        series: string;
+        specifics: string;
+        chassisCode: string;
+        yearRange: string;
+    }[];
 }>;
 export declare function getProductPublic(id: string): Promise<{
     price: string;
@@ -404,6 +447,8 @@ export declare function getProductPublic(id: string): Promise<{
     fitments: ({
         vehicle: {
             id: number;
+            nameEn: string;
+            nameAr: string;
             brand: string;
             series: string;
             specifics: string;
@@ -431,6 +476,7 @@ export declare function getProductPublic(id: string): Promise<{
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
     updatedAt: Date;
 }>;

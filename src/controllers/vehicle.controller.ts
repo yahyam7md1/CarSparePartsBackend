@@ -65,7 +65,15 @@ export async function createVehicle(
 ) {
   try {
     const body = createVehicleBodySchema.parse(req.body);
-    const vehicle = await vehicleService.createVehicle(body);
+    const vehicle = await vehicleService.createVehicle({
+      brand: body.brand,
+      series: body.series,
+      specifics: body.specifics,
+      chassisCode: body.chassisCode,
+      yearRange: body.yearRange,
+      ...(body.nameEn !== undefined ? { nameEn: body.nameEn } : {}),
+      ...(body.nameAr !== undefined ? { nameAr: body.nameAr } : {}),
+    });
     res.status(201).json({ vehicle });
   } catch (err) {
     if (err instanceof ZodError) {
@@ -85,6 +93,8 @@ export async function updateVehicle(
     const params = vehicleIdParamsSchema.parse(req.params);
     const body = updateVehicleBodySchema.parse(req.body);
     const vehicle = await vehicleService.updateVehicle(params.id, {
+      ...(body.nameEn !== undefined ? { nameEn: body.nameEn } : {}),
+      ...(body.nameAr !== undefined ? { nameAr: body.nameAr } : {}),
       ...(body.brand !== undefined ? { brand: body.brand } : {}),
       ...(body.series !== undefined ? { series: body.series } : {}),
       ...(body.specifics !== undefined ? { specifics: body.specifics } : {}),

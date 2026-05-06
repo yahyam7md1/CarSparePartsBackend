@@ -29,6 +29,8 @@ export async function countVehicles(brand?: string): Promise<number> {
 }
 
 export async function createVehicle(data: {
+  nameEn: string;
+  nameAr: string;
   brand: string;
   series: string;
   specifics: string;
@@ -41,6 +43,8 @@ export async function createVehicle(data: {
 export async function updateVehicle(
   id: number,
   data: {
+    nameEn?: string;
+    nameAr?: string;
     brand?: string;
     series?: string;
     specifics?: string;

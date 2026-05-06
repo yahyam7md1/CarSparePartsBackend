@@ -30,6 +30,8 @@ export async function getVehicle(id: number): Promise<Vehicle> {
 }
 
 export async function createVehicle(input: {
+  nameEn?: string;
+  nameAr?: string;
   brand: string;
   series: string;
   specifics: string;
@@ -37,6 +39,8 @@ export async function createVehicle(input: {
   yearRange: string;
 }): Promise<Vehicle> {
   return vehicleRepository.createVehicle({
+    nameEn: (input.nameEn ?? "").trim(),
+    nameAr: (input.nameAr ?? "").trim(),
     brand: input.brand.trim(),
     series: input.series.trim(),
     specifics: input.specifics.trim(),
@@ -48,6 +52,8 @@ export async function createVehicle(input: {
 export async function updateVehicle(
   id: number,
   input: {
+    nameEn?: string;
+    nameAr?: string;
     brand?: string;
     series?: string;
     specifics?: string;
@@ -57,6 +63,12 @@ export async function updateVehicle(
 ): Promise<Vehicle> {
   await getVehicle(id);
   const data: Parameters<typeof vehicleRepository.updateVehicle>[1] = {};
+  if (input.nameEn !== undefined) {
+    data.nameEn = input.nameEn.trim();
+  }
+  if (input.nameAr !== undefined) {
+    data.nameAr = input.nameAr.trim();
+  }
   if (input.brand !== undefined) {
     data.brand = input.brand.trim();
   }

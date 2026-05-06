@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Vehicle } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 
 const listImageArgs = {
@@ -54,20 +54,37 @@ export function buildAdminProductWhere(q: {
 
 export function buildPublicProductWhere(q: {
   categoryId?: number;
+  vehicleId?: number;
+  oemContains?: string;
   search?: string;
 }): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { isActive: true };
   if (q.categoryId !== undefined) {
     where.categoryId = q.categoryId;
   }
+  if (q.vehicleId !== undefined) {
+    where.fitments = { some: { vehicleId: q.vehicleId } };
+  }
+  const andClauses: Prisma.ProductWhereInput[] = [];
+  if (q.oemContains !== undefined) {
+    const o = q.oemContains.trim();
+    andClauses.push({
+      oemNumber: { contains: o, mode: "insensitive" },
+    });
+  }
   if (q.search !== undefined) {
     const s = q.search.trim();
-    where.OR = [
-      { sku: { contains: s, mode: "insensitive" } },
-      { nameEn: { contains: s, mode: "insensitive" } },
-      { nameAr: { contains: s, mode: "insensitive" } },
-      { oemNumber: { contains: s, mode: "insensitive" } },
-    ];
+    andClauses.push({
+      OR: [
+        { sku: { contains: s, mode: "insensitive" } },
+        { nameEn: { contains: s, mode: "insensitive" } },
+        { nameAr: { contains: s, mode: "insensitive" } },
+        { oemNumber: { contains: s, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (andClauses.length > 0) {
+    where.AND = andClauses;
   }
   return where;
 }
@@ -148,6 +165,7 @@ export async function createProduct(data: {
   dimensions: string | null;
   weight: number | null;
   manufacturedIn: string | null;
+  generation: string | null;
   condition: string;
 }): Promise<ProductDetail> {
   return prisma.product.create({
@@ -316,4 +334,42 @@ export function listPublicProducts(
     take: params.take,
     include: publicListInclude,
   });
+}
+
+const featuredPublicWhere: Prisma.ProductWhereInput = {
+  isActive: true,
+  isFeatured: true,
+};
+
+export function listFeaturedPublicProducts(params: {
+  skip: number;
+  take: number;
+}): Promise<ProductAdminListRow[]> {
+  return prisma.product.findMany({
+    where: featuredPublicWhere,
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    skip: params.skip,
+    take: params.take,
+    include: publicListInclude,
+  });
+}
+
+export async function countFeaturedPublicProducts(): Promise<number> {
+  return prisma.product.count({ where: featuredPublicWhere });
+}
+
+export async function findActiveProductVehicles(id: string): Promise<Vehicle[] | null> {
+  const p = await prisma.product.findFirst({
+    where: { id, isActive: true },
+    select: {
+      fitments: {
+        orderBy: { vehicleId: "asc" },
+        select: { vehicle: true },
+      },
+    },
+  });
+  if (!p) {
+    return null;
+  }
+  return p.fitments.map((f) => f.vehicle);
 }

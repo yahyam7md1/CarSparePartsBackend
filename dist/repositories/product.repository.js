@@ -46,14 +46,29 @@ export function buildPublicProductWhere(q) {
     if (q.categoryId !== undefined) {
         where.categoryId = q.categoryId;
     }
+    if (q.vehicleId !== undefined) {
+        where.fitments = { some: { vehicleId: q.vehicleId } };
+    }
+    const andClauses = [];
+    if (q.oemContains !== undefined) {
+        const o = q.oemContains.trim();
+        andClauses.push({
+            oemNumber: { contains: o, mode: "insensitive" },
+        });
+    }
     if (q.search !== undefined) {
         const s = q.search.trim();
-        where.OR = [
-            { sku: { contains: s, mode: "insensitive" } },
-            { nameEn: { contains: s, mode: "insensitive" } },
-            { nameAr: { contains: s, mode: "insensitive" } },
-            { oemNumber: { contains: s, mode: "insensitive" } },
-        ];
+        andClauses.push({
+            OR: [
+                { sku: { contains: s, mode: "insensitive" } },
+                { nameEn: { contains: s, mode: "insensitive" } },
+                { nameAr: { contains: s, mode: "insensitive" } },
+                { oemNumber: { contains: s, mode: "insensitive" } },
+            ],
+        });
+    }
+    if (andClauses.length > 0) {
+        where.AND = andClauses;
     }
     return where;
 }
@@ -212,5 +227,36 @@ export function listPublicProducts(where, params) {
         take: params.take,
         include: publicListInclude,
     });
+}
+const featuredPublicWhere = {
+    isActive: true,
+    isFeatured: true,
+};
+export function listFeaturedPublicProducts(params) {
+    return prisma.product.findMany({
+        where: featuredPublicWhere,
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        skip: params.skip,
+        take: params.take,
+        include: publicListInclude,
+    });
+}
+export async function countFeaturedPublicProducts() {
+    return prisma.product.count({ where: featuredPublicWhere });
+}
+export async function findActiveProductVehicles(id) {
+    const p = await prisma.product.findFirst({
+        where: { id, isActive: true },
+        select: {
+            fitments: {
+                orderBy: { vehicleId: "asc" },
+                select: { vehicle: true },
+            },
+        },
+    });
+    if (!p) {
+        return null;
+    }
+    return p.fitments.map((f) => f.vehicle);
 }
 //# sourceMappingURL=product.repository.js.map

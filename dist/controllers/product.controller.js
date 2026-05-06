@@ -1,7 +1,7 @@
 import { ZodError } from "zod";
 import { HttpError } from "../utils/errors.js";
 import * as productService from "../services/product.service.js";
-import { adminProductListQuerySchema, bulkPatchInventoryBodySchema, createProductBodySchema, patchInventoryBodySchema, productIdParamsSchema, productImageIdParamsSchema, publicProductListQuerySchema, replaceFitmentsBodySchema, updateProductBodySchema, uploadProductImageMetaSchema, } from "../schemas/product.schemas.js";
+import { adminProductListQuerySchema, bulkPatchInventoryBodySchema, createProductBodySchema, patchInventoryBodySchema, productIdParamsSchema, productImageIdParamsSchema, publicFeaturedQuerySchema, publicProductListQuerySchema, replaceFitmentsBodySchema, updateProductBodySchema, uploadProductImageMetaSchema, } from "../schemas/product.schemas.js";
 export async function listProductsAdmin(req, res, next) {
     try {
         const q = adminProductListQuerySchema.parse(req.query);
@@ -61,6 +61,7 @@ export async function createProduct(req, res, next) {
             ...(body.dimensions !== undefined ? { dimensions: body.dimensions } : {}),
             ...(body.weight !== undefined ? { weight: body.weight } : {}),
             ...(body.manufacturedIn !== undefined ? { manufacturedIn: body.manufacturedIn } : {}),
+            ...(body.generation !== undefined ? { generation: body.generation } : {}),
             ...(body.condition !== undefined ? { condition: body.condition } : {}),
         });
         res.status(201).json({ product });
@@ -97,6 +98,7 @@ export async function updateProduct(req, res, next) {
             ...(body.dimensions !== undefined ? { dimensions: body.dimensions } : {}),
             ...(body.weight !== undefined ? { weight: body.weight } : {}),
             ...(body.manufacturedIn !== undefined ? { manufacturedIn: body.manufacturedIn } : {}),
+            ...(body.generation !== undefined ? { generation: body.generation } : {}),
             ...(body.condition !== undefined ? { condition: body.condition } : {}),
         });
         res.json({ product });
@@ -234,6 +236,9 @@ export async function listProductsPublic(req, res, next) {
             ...(q.page !== undefined ? { page: q.page } : {}),
             ...(q.limit !== undefined ? { limit: q.limit } : {}),
             ...(q.categoryId !== undefined ? { categoryId: q.categoryId } : {}),
+            ...(q.categorySlug !== undefined ? { categorySlug: q.categorySlug } : {}),
+            ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
+            ...(q.oem !== undefined ? { oem: q.oem } : {}),
             ...(q.q !== undefined ? { q: q.q } : {}),
         });
         res.json(result);
@@ -241,6 +246,45 @@ export async function listProductsPublic(req, res, next) {
     catch (err) {
         if (err instanceof ZodError) {
             res.status(400).json({ error: "Invalid request", details: err.flatten() });
+            return;
+        }
+        if (err instanceof HttpError) {
+            res.status(err.statusCode).json({ error: err.message });
+            return;
+        }
+        next(err);
+    }
+}
+export async function listFeaturedProductsPublic(req, res, next) {
+    try {
+        const q = publicFeaturedQuerySchema.parse(req.query);
+        const result = await productService.listFeaturedProductsPublic({
+            ...(q.page !== undefined ? { page: q.page } : {}),
+            ...(q.limit !== undefined ? { limit: q.limit } : {}),
+        });
+        res.json(result);
+    }
+    catch (err) {
+        if (err instanceof ZodError) {
+            res.status(400).json({ error: "Invalid request", details: err.flatten() });
+            return;
+        }
+        next(err);
+    }
+}
+export async function getProductFitmentsPublic(req, res, next) {
+    try {
+        const params = productIdParamsSchema.parse(req.params);
+        const result = await productService.getProductFitmentsPublic(params.id);
+        res.json(result);
+    }
+    catch (err) {
+        if (err instanceof ZodError) {
+            res.status(400).json({ error: "Invalid request", details: err.flatten() });
+            return;
+        }
+        if (err instanceof HttpError) {
+            res.status(err.statusCode).json({ error: err.message });
             return;
         }
         next(err);

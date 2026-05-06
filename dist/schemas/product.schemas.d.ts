@@ -25,7 +25,14 @@ export declare const publicProductListQuerySchema: z.ZodObject<{
     page: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
     limit: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
     categoryId: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
+    categorySlug: z.ZodOptional<z.ZodString>;
+    vehicleId: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
+    oem: z.ZodOptional<z.ZodString>;
     q: z.ZodOptional<z.ZodString>;
+}, z.core.$strip>;
+export declare const publicFeaturedQuerySchema: z.ZodObject<{
+    page: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
+    limit: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
 }, z.core.$strip>;
 export declare const createProductBodySchema: z.ZodObject<{
     sku: z.ZodString;
@@ -43,6 +50,7 @@ export declare const createProductBodySchema: z.ZodObject<{
     dimensions: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     weight: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     manufacturedIn: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    generation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     condition: z.ZodOptional<z.ZodEnum<{
         new: "new";
         used: "used";
@@ -64,6 +72,7 @@ export declare const updateProductBodySchema: z.ZodObject<{
     dimensions: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     weight: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
     manufacturedIn: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    generation: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     condition: z.ZodOptional<z.ZodEnum<{
         new: "new";
         used: "used";

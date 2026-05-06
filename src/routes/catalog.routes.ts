@@ -7,6 +7,12 @@ export function createCatalogRouter(): Router {
   router.get("/categories", (req, res, next) => {
     void categoryController.listCategoriesTreePublic(req, res, next).catch(next);
   });
+  router.get("/products/featured", (req, res, next) => {
+    void productController.listFeaturedProductsPublic(req, res, next).catch(next);
+  });
+  router.get("/products/:id/fitments", (req, res, next) => {
+    void productController.getProductFitmentsPublic(req, res, next).catch(next);
+  });
   router.get("/products", (req, res, next) => {
     void productController.listProductsPublic(req, res, next).catch(next);
   });

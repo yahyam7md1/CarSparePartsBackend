@@ -10,5 +10,7 @@ export declare function replaceFitments(req: Request, res: Response, next: NextF
 export declare function patchInventory(req: Request, res: Response, next: NextFunction): Promise<void>;
 export declare function bulkPatchInventory(req: Request, res: Response, next: NextFunction): Promise<void>;
 export declare function listProductsPublic(req: Request, res: Response, next: NextFunction): Promise<void>;
+export declare function listFeaturedProductsPublic(req: Request, res: Response, next: NextFunction): Promise<void>;
+export declare function getProductFitmentsPublic(req: Request, res: Response, next: NextFunction): Promise<void>;
 export declare function getProductPublic(req: Request, res: Response, next: NextFunction): Promise<void>;
 //# sourceMappingURL=product.controller.d.ts.map

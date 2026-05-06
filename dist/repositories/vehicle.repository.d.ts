@@ -7,6 +7,8 @@ export declare function listVehicles(params?: {
 }): Promise<Vehicle[]>;
 export declare function countVehicles(brand?: string): Promise<number>;
 export declare function createVehicle(data: {
+    nameEn: string;
+    nameAr: string;
     brand: string;
     series: string;
     specifics: string;
@@ -14,6 +16,8 @@ export declare function createVehicle(data: {
     yearRange: string;
 }): Promise<Vehicle>;
 export declare function updateVehicle(id: number, data: {
+    nameEn?: string;
+    nameAr?: string;
     brand?: string;
     series?: string;
     specifics?: string;

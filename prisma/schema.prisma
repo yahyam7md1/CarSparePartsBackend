@@ -45,6 +45,7 @@ model Product {
   dimensions     String?
   weight         Float?
   manufacturedIn String?
+  generation     String?
   condition      String         @default("new") // new, used
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -71,6 +72,8 @@ model ProductImage {
 // 5. Vehicles Table (The Car Library)
 model Vehicle {
   id          Int       @id @default(autoincrement())
+  nameEn      String    @default("")
+  nameAr      String    @default("")
   brand       String    // e.g., BMW
   series      String    // e.g., 5 Series
   specifics   String    // e.g., 530i

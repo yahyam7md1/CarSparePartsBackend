@@ -103,6 +103,7 @@ export async function createProduct(input: {
   dimensions?: string | null;
   weight?: number | null;
   manufacturedIn?: string | null;
+  generation?: string | null;
   condition?: "new" | "used";
 }) {
   const cat = await categoryRepository.findCategoryById(input.categoryId);
@@ -126,6 +127,7 @@ export async function createProduct(input: {
       dimensions: input.dimensions ?? null,
       weight: input.weight ?? null,
       manufacturedIn: input.manufacturedIn ?? null,
+      generation: input.generation ?? null,
       condition: input.condition ?? "new",
     });
     return mapDetail(p);
@@ -152,6 +154,7 @@ export async function updateProduct(
     dimensions?: string | null;
     weight?: number | null;
     manufacturedIn?: string | null;
+    generation?: string | null;
     condition?: "new" | "used";
   },
 ) {
@@ -206,6 +209,9 @@ export async function updateProduct(
   }
   if (input.manufacturedIn !== undefined) {
     data.manufacturedIn = input.manufacturedIn;
+  }
+  if (input.generation !== undefined) {
+    data.generation = input.generation;
   }
   if (input.condition !== undefined) {
     data.condition = input.condition;
@@ -377,13 +383,29 @@ export async function listProductsPublic(q: {
   page?: number;
   limit?: number;
   categoryId?: number;
+  categorySlug?: string;
+  vehicleId?: number;
+  oem?: string;
   q?: string;
 }) {
+  let categoryId = q.categoryId;
+  if (q.categorySlug !== undefined) {
+    const cat = await categoryRepository.findCategoryBySlug(q.categorySlug.trim());
+    if (!cat) {
+      throw new HttpError(400, "Category not found");
+    }
+    if (categoryId !== undefined && categoryId !== cat.id) {
+      throw new HttpError(400, "categoryId does not match categorySlug");
+    }
+    categoryId = cat.id;
+  }
   const limit = Math.min(Math.max(q.limit ?? 50, 1), 200);
   const page = Math.max(q.page ?? 1, 1);
   const skip = (page - 1) * limit;
   const where = productRepository.buildPublicProductWhere({
-    ...(q.categoryId !== undefined ? { categoryId: q.categoryId } : {}),
+    ...(categoryId !== undefined ? { categoryId } : {}),
+    ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
+    ...(q.oem !== undefined ? { oemContains: q.oem } : {}),
     ...(q.q !== undefined ? { search: q.q } : {}),
   });
   const [rows, total] = await Promise.all([
@@ -396,6 +418,35 @@ export async function listProductsPublic(q: {
     page,
     limit,
   };
+}
+
+export async function listFeaturedProductsPublic(q: { page?: number; limit?: number }): Promise<{
+  products: ReturnType<typeof mapListRow>[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const limit = Math.min(Math.max(q.limit ?? 12, 1), 50);
+  const page = Math.max(q.page ?? 1, 1);
+  const skip = (page - 1) * limit;
+  const [rows, total] = await Promise.all([
+    productRepository.listFeaturedPublicProducts({ skip, take: limit }),
+    productRepository.countFeaturedPublicProducts(),
+  ]);
+  return {
+    products: rows.map(mapListRow),
+    total,
+    page,
+    limit,
+  };
+}
+
+export async function getProductFitmentsPublic(id: string) {
+  const vehicles = await productRepository.findActiveProductVehicles(id);
+  if (vehicles === null) {
+    throw new HttpError(404, "Product not found");
+  }
+  return { vehicles };
 }
 
 export async function getProductPublic(id: string) {

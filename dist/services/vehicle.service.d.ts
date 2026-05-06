@@ -11,6 +11,8 @@ export declare function listVehicles(q: {
 }>;
 export declare function getVehicle(id: number): Promise<Vehicle>;
 export declare function createVehicle(input: {
+    nameEn?: string;
+    nameAr?: string;
     brand: string;
     series: string;
     specifics: string;
@@ -18,6 +20,8 @@ export declare function createVehicle(input: {
     yearRange: string;
 }): Promise<Vehicle>;
 export declare function updateVehicle(id: number, input: {
+    nameEn?: string;
+    nameAr?: string;
     brand?: string;
     series?: string;
     specifics?: string;

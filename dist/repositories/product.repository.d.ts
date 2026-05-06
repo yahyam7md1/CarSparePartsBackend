@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Vehicle } from "@prisma/client";
 export declare function buildAdminProductWhere(q: {
     categoryId?: number;
     brandName?: string;
@@ -8,6 +8,8 @@ export declare function buildAdminProductWhere(q: {
 }): Prisma.ProductWhereInput;
 export declare function buildPublicProductWhere(q: {
     categoryId?: number;
+    vehicleId?: number;
+    oemContains?: string;
     search?: string;
 }): Prisma.ProductWhereInput;
 declare const adminListInclude: {
@@ -102,6 +104,7 @@ export declare function createProduct(data: {
     dimensions: string | null;
     weight: number | null;
     manufacturedIn: string | null;
+    generation: string | null;
     condition: string;
 }): Promise<ProductDetail>;
 export declare function updateProduct(id: string, data: Prisma.ProductUpdateInput): Promise<ProductDetail>;
@@ -136,5 +139,11 @@ export declare function listPublicProducts(where: Prisma.ProductWhereInput, para
     skip: number;
     take: number;
 }): Promise<ProductAdminListRow[]>;
+export declare function listFeaturedPublicProducts(params: {
+    skip: number;
+    take: number;
+}): Promise<ProductAdminListRow[]>;
+export declare function countFeaturedPublicProducts(): Promise<number>;
+export declare function findActiveProductVehicles(id: string): Promise<Vehicle[] | null>;
 export {};
 //# sourceMappingURL=product.repository.d.ts.map

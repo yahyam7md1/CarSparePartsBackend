@@ -26,7 +26,14 @@ export const publicProductListQuerySchema = z.object({
     page: z.coerce.number().int().positive().optional(),
     limit: z.coerce.number().int().positive().optional(),
     categoryId: z.coerce.number().int().positive().optional(),
+    categorySlug: z.string().trim().min(1).optional(),
+    vehicleId: z.coerce.number().int().positive().optional(),
+    oem: z.string().trim().min(1).optional(),
     q: z.string().trim().min(1).optional(),
+});
+export const publicFeaturedQuerySchema = z.object({
+    page: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().optional(),
 });
 export const createProductBodySchema = z.object({
     sku: z.string().trim().min(1).max(200),
@@ -44,6 +51,7 @@ export const createProductBodySchema = z.object({
     dimensions: z.string().trim().max(500).nullable().optional(),
     weight: z.number().finite().positive().nullable().optional(),
     manufacturedIn: z.string().trim().max(200).nullable().optional(),
+    generation: z.string().trim().max(200).nullable().optional(),
     condition: conditionSchema.optional(),
 });
 export const updateProductBodySchema = z
@@ -63,6 +71,7 @@ export const updateProductBodySchema = z
     dimensions: z.string().trim().max(500).nullable().optional(),
     weight: z.number().finite().positive().nullable().optional(),
     manufacturedIn: z.string().trim().max(200).nullable().optional(),
+    generation: z.string().trim().max(200).nullable().optional(),
     condition: conditionSchema.optional(),
 })
     .refine((o) => Object.keys(o).length > 0, { message: "At least one field is required" });
