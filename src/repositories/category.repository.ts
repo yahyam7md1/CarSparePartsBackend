@@ -1,5 +1,13 @@
-import type { Category } from "@prisma/client";
+import type { Category, Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+
+const adminCategoryListInclude = {
+  _count: { select: { products: true } },
+} satisfies Prisma.CategoryInclude;
+
+export type CategoryAdminListRow = Prisma.CategoryGetPayload<{
+  include: typeof adminCategoryListInclude;
+}>;
 
 export async function findCategoryById(id: number): Promise<Category | null> {
   return prisma.category.findUnique({ where: { id } });
@@ -21,6 +29,13 @@ export async function slugTaken(slug: string, excludeId?: number): Promise<boole
 
 export async function listAllCategories(): Promise<Category[]> {
   return prisma.category.findMany({ orderBy: [{ parentId: "asc" }, { id: "asc" }] });
+}
+
+export async function listAllCategoriesWithProductCount(): Promise<CategoryAdminListRow[]> {
+  return prisma.category.findMany({
+    orderBy: [{ parentId: "asc" }, { id: "asc" }],
+    include: adminCategoryListInclude,
+  });
 }
 
 export async function countChildCategories(parentId: number): Promise<number> {

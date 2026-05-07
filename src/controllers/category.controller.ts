@@ -14,7 +14,7 @@ export async function listCategoriesAdmin(
   next: NextFunction,
 ) {
   try {
-    const rows = await categoryService.listCategoriesFlat();
+    const rows = await categoryService.listCategoriesForAdmin();
     res.json({ categories: rows });
   } catch (err) {
     next(err);

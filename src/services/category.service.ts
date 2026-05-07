@@ -120,6 +120,19 @@ export async function deleteCategory(id: number): Promise<void> {
   await categoryRepository.deleteCategory(id);
 }
 
+/** Admin list row — direct products in this category (not aggregated from children). */
+export type AdminCategoryListItem = Category & {
+  productCount: number;
+};
+
+export async function listCategoriesForAdmin(): Promise<AdminCategoryListItem[]> {
+  const rows = await categoryRepository.listAllCategoriesWithProductCount();
+  return rows.map(({ _count, ...cat }) => ({
+    ...cat,
+    productCount: _count.products,
+  }));
+}
+
 export async function listCategoriesFlat(): Promise<Category[]> {
   return categoryRepository.listAllCategories();
 }
