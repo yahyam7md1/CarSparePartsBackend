@@ -126,10 +126,13 @@ export type AdminCategoryListItem = Category & {
 };
 
 export async function listCategoriesForAdmin(): Promise<AdminCategoryListItem[]> {
-  const rows = await categoryRepository.listAllCategoriesWithProductCount();
-  return rows.map(({ _count, ...cat }) => ({
+  const [categories, countMap] = await Promise.all([
+    categoryRepository.listAllCategories(),
+    categoryRepository.getProductCountByCategoryMap(),
+  ]);
+  return categories.map((cat) => ({
     ...cat,
-    productCount: _count.products,
+    productCount: countMap.get(cat.id) ?? 0,
   }));
 }
 

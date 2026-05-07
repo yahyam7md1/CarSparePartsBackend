@@ -1,13 +1,5 @@
-import type { Category, Prisma } from "@prisma/client";
+import type { Category } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-
-const adminCategoryListInclude = {
-  _count: { select: { products: true } },
-} satisfies Prisma.CategoryInclude;
-
-export type CategoryAdminListRow = Prisma.CategoryGetPayload<{
-  include: typeof adminCategoryListInclude;
-}>;
 
 export async function findCategoryById(id: number): Promise<Category | null> {
   return prisma.category.findUnique({ where: { id } });
@@ -31,11 +23,13 @@ export async function listAllCategories(): Promise<Category[]> {
   return prisma.category.findMany({ orderBy: [{ parentId: "asc" }, { id: "asc" }] });
 }
 
-export async function listAllCategoriesWithProductCount(): Promise<CategoryAdminListRow[]> {
-  return prisma.category.findMany({
-    orderBy: [{ parentId: "asc" }, { id: "asc" }],
-    include: adminCategoryListInclude,
+/** Product counts per category (direct assignment only). */
+export async function getProductCountByCategoryMap(): Promise<Map<number, number>> {
+  const rows = await prisma.product.groupBy({
+    by: ["categoryId"],
+    _count: { _all: true },
   });
+  return new Map(rows.map((r) => [r.categoryId, r._count._all]));
 }
 
 export async function countChildCategories(parentId: number): Promise<number> {
