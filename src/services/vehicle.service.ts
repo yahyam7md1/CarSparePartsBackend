@@ -1,23 +1,35 @@
 import type { Vehicle } from "@prisma/client";
 import { HttpError } from "../utils/errors.js";
+import * as productRepository from "../repositories/product.repository.js";
 import * as vehicleRepository from "../repositories/vehicle.repository.js";
+
+export type VehicleAdminDto = Vehicle & { fitmentCount: number };
 
 export async function listVehicles(q: {
   page?: number;
   limit?: number;
   brand?: string;
-}): Promise<{ items: Vehicle[]; total: number; page: number; limit: number }> {
+  q?: string;
+}): Promise<{ items: VehicleAdminDto[]; total: number; page: number; limit: number }> {
   const limit = Math.min(Math.max(q.limit ?? 50, 1), 200);
   const page = Math.max(q.page ?? 1, 1);
   const skip = (page - 1) * limit;
-  const [items, total] = await Promise.all([
-    vehicleRepository.listVehicles({
+  const [rows, total] = await Promise.all([
+    vehicleRepository.listVehiclesAdmin({
       skip,
       take: limit,
       ...(q.brand !== undefined ? { brand: q.brand } : {}),
+      ...(q.q !== undefined ? { q: q.q } : {}),
     }),
-    vehicleRepository.countVehicles(q.brand),
+    vehicleRepository.countVehiclesAdmin({
+      ...(q.brand !== undefined ? { brand: q.brand } : {}),
+      ...(q.q !== undefined ? { q: q.q } : {}),
+    }),
   ]);
+  const items = rows.map(({ _count, ...vehicle }) => ({
+    ...vehicle,
+    fitmentCount: _count.fitments,
+  }));
   return { items, total, page, limit };
 }
 
@@ -90,4 +102,19 @@ export async function updateVehicle(
 export async function deleteVehicle(id: number): Promise<void> {
   await getVehicle(id);
   await vehicleRepository.deleteVehicle(id);
+}
+
+export async function mergeVehicleFitments(
+  sourceVehicleId: number,
+  targetVehicleId: number,
+): Promise<{ fitmentsCreated: number }> {
+  if (sourceVehicleId === targetVehicleId) {
+    throw new HttpError(400, "sourceVehicleId and targetVehicleId must differ");
+  }
+  await getVehicle(sourceVehicleId);
+  await getVehicle(targetVehicleId);
+  return productRepository.mergeFitmentsFromSourceVehicleToTargetVehicle(
+    sourceVehicleId,
+    targetVehicleId,
+  );
 }

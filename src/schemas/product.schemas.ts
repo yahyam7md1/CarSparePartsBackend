@@ -16,6 +16,8 @@ export const adminProductListQuerySchema = z.object({
   limit: z.coerce.number().int().positive().optional(),
   categoryId: z.coerce.number().int().positive().optional(),
   brandName: z.string().trim().min(1).optional(),
+  vehicleId: z.coerce.number().int().positive().optional(),
+  chassisCode: z.string().trim().min(1).optional(),
   isActive: z
     .enum(["true", "false"])
     .optional()
@@ -27,6 +29,15 @@ export const adminProductListQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
 });
 
+export const publicProductSortSchema = z.enum([
+  "featured",
+  "newest",
+  "price_asc",
+  "price_desc",
+  "name_en_asc",
+  "name_ar_asc",
+]);
+
 export const publicProductListQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().optional(),
@@ -35,6 +46,9 @@ export const publicProductListQuerySchema = z.object({
   vehicleId: z.coerce.number().int().positive().optional(),
   oem: z.string().trim().min(1).optional(),
   q: z.string().trim().min(1).optional(),
+  minPrice: z.coerce.number().finite().nonnegative().optional(),
+  maxPrice: z.coerce.number().finite().nonnegative().optional(),
+  sort: publicProductSortSchema.optional(),
 });
 
 export const publicFeaturedQuerySchema = z.object({
@@ -52,6 +66,7 @@ export const createProductBodySchema = z.object({
   descEn: z.string().trim().max(20000).nullable().optional(),
   descAr: z.string().trim().max(20000).nullable().optional(),
   price: z.coerce.number().finite().nonnegative(),
+  compareAtPrice: z.coerce.number().finite().nonnegative().nullable().optional(),
   stockQuantity: z.number().int().min(0).optional(),
   isFeatured: z.boolean().optional(),
   isActive: z.boolean().optional(),
@@ -73,6 +88,7 @@ export const updateProductBodySchema = z
     descEn: z.string().trim().max(20000).nullable().optional(),
     descAr: z.string().trim().max(20000).nullable().optional(),
     price: z.coerce.number().finite().nonnegative().optional(),
+    compareAtPrice: z.coerce.number().finite().nonnegative().nullable().optional(),
     stockQuantity: z.number().int().min(0).optional(),
     isFeatured: z.boolean().optional(),
     isActive: z.boolean().optional(),

@@ -5,7 +5,7 @@ import { ALLOWED_IMAGE_MIMETYPES, makeLargeWebp, makeThumbWebp } from "../lib/im
 import { prisma } from "../lib/prisma.js";
 import * as categoryRepository from "../repositories/category.repository.js";
 import * as productRepository from "../repositories/product.repository.js";
-import type { ProductAdminListRow, ProductDetail } from "../repositories/product.repository.js";
+import type { ProductAdminListRow, ProductDetail, PublicProductSort } from "../repositories/product.repository.js";
 import { publicUrlToStorageKey } from "../utils/product-storage-paths.js";
 import { HttpError } from "../utils/errors.js";
 
@@ -13,6 +13,7 @@ function mapDetail(p: ProductDetail) {
   return {
     ...p,
     price: p.price.toString(),
+    compareAtPrice: p.compareAtPrice != null ? p.compareAtPrice.toString() : null,
   };
 }
 
@@ -20,6 +21,7 @@ function mapListRow(p: ProductAdminListRow) {
   return {
     ...p,
     price: p.price.toString(),
+    compareAtPrice: p.compareAtPrice != null ? p.compareAtPrice.toString() : null,
   };
 }
 
@@ -48,6 +50,8 @@ export async function listProductsAdmin(q: {
   limit?: number;
   categoryId?: number;
   brandName?: string;
+  vehicleId?: number;
+  chassisCode?: string;
   isActive?: boolean;
   isFeatured?: boolean;
   q?: string;
@@ -63,6 +67,8 @@ export async function listProductsAdmin(q: {
   const where = productRepository.buildAdminProductWhere({
     ...(q.categoryId !== undefined ? { categoryId: q.categoryId } : {}),
     ...(q.brandName !== undefined ? { brandName: q.brandName } : {}),
+    ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
+    ...(q.chassisCode !== undefined ? { chassisCode: q.chassisCode } : {}),
     ...(q.isActive !== undefined ? { isActive: q.isActive } : {}),
     ...(q.isFeatured !== undefined ? { isFeatured: q.isFeatured } : {}),
     ...(q.q !== undefined ? { search: q.q } : {}),
@@ -97,6 +103,7 @@ export async function createProduct(input: {
   descEn?: string | null;
   descAr?: string | null;
   price: number;
+  compareAtPrice?: number | null;
   stockQuantity?: number;
   isFeatured?: boolean;
   isActive?: boolean;
@@ -121,6 +128,7 @@ export async function createProduct(input: {
       descEn: input.descEn ?? null,
       descAr: input.descAr ?? null,
       price: input.price,
+      compareAtPrice: input.compareAtPrice ?? null,
       stockQuantity: input.stockQuantity ?? 0,
       isFeatured: input.isFeatured ?? false,
       isActive: input.isActive ?? true,
@@ -148,6 +156,7 @@ export async function updateProduct(
     descEn?: string | null;
     descAr?: string | null;
     price?: number;
+    compareAtPrice?: number | null;
     stockQuantity?: number;
     isFeatured?: boolean;
     isActive?: boolean;
@@ -191,6 +200,9 @@ export async function updateProduct(
   }
   if (input.price !== undefined) {
     data.price = input.price;
+  }
+  if (input.compareAtPrice !== undefined) {
+    data.compareAtPrice = input.compareAtPrice;
   }
   if (input.stockQuantity !== undefined) {
     data.stockQuantity = input.stockQuantity;
@@ -387,6 +399,9 @@ export async function listProductsPublic(q: {
   vehicleId?: number;
   oem?: string;
   q?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: PublicProductSort;
 }) {
   let categoryId = q.categoryId;
   if (q.categorySlug !== undefined) {
@@ -399,6 +414,13 @@ export async function listProductsPublic(q: {
     }
     categoryId = cat.id;
   }
+  if (
+    q.minPrice !== undefined &&
+    q.maxPrice !== undefined &&
+    q.minPrice > q.maxPrice
+  ) {
+    throw new HttpError(400, "minPrice cannot be greater than maxPrice");
+  }
   const limit = Math.min(Math.max(q.limit ?? 50, 1), 200);
   const page = Math.max(q.page ?? 1, 1);
   const skip = (page - 1) * limit;
@@ -407,9 +429,15 @@ export async function listProductsPublic(q: {
     ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
     ...(q.oem !== undefined ? { oemContains: q.oem } : {}),
     ...(q.q !== undefined ? { search: q.q } : {}),
+    ...(q.minPrice !== undefined ? { minPrice: q.minPrice } : {}),
+    ...(q.maxPrice !== undefined ? { maxPrice: q.maxPrice } : {}),
   });
   const [rows, total] = await Promise.all([
-    productRepository.listPublicProducts(where, { skip, take: limit }),
+    productRepository.listPublicProducts(where, {
+      skip,
+      take: limit,
+      ...(q.sort !== undefined ? { sort: q.sort } : {}),
+    }),
     productRepository.countProductsWhere(where),
   ]);
   return {

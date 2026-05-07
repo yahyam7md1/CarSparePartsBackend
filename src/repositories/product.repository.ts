@@ -26,55 +26,25 @@ export function buildAdminProductWhere(q: {
   isActive?: boolean;
   isFeatured?: boolean;
   search?: string;
+  vehicleId?: number;
+  chassisCode?: string;
 }): Prisma.ProductWhereInput {
-  const where: Prisma.ProductWhereInput = {};
+  const and: Prisma.ProductWhereInput[] = [];
   if (q.categoryId !== undefined) {
-    where.categoryId = q.categoryId;
+    and.push({ categoryId: q.categoryId });
   }
   if (q.brandName !== undefined) {
-    where.brandName = { equals: q.brandName, mode: "insensitive" };
+    and.push({ brandName: { equals: q.brandName, mode: "insensitive" } });
   }
   if (q.isActive !== undefined) {
-    where.isActive = q.isActive;
+    and.push({ isActive: q.isActive });
   }
   if (q.isFeatured !== undefined) {
-    where.isFeatured = q.isFeatured;
+    and.push({ isFeatured: q.isFeatured });
   }
   if (q.search !== undefined) {
     const s = q.search.trim();
-    where.OR = [
-      { sku: { contains: s, mode: "insensitive" } },
-      { nameEn: { contains: s, mode: "insensitive" } },
-      { nameAr: { contains: s, mode: "insensitive" } },
-      { oemNumber: { contains: s, mode: "insensitive" } },
-    ];
-  }
-  return where;
-}
-
-export function buildPublicProductWhere(q: {
-  categoryId?: number;
-  vehicleId?: number;
-  oemContains?: string;
-  search?: string;
-}): Prisma.ProductWhereInput {
-  const where: Prisma.ProductWhereInput = { isActive: true };
-  if (q.categoryId !== undefined) {
-    where.categoryId = q.categoryId;
-  }
-  if (q.vehicleId !== undefined) {
-    where.fitments = { some: { vehicleId: q.vehicleId } };
-  }
-  const andClauses: Prisma.ProductWhereInput[] = [];
-  if (q.oemContains !== undefined) {
-    const o = q.oemContains.trim();
-    andClauses.push({
-      oemNumber: { contains: o, mode: "insensitive" },
-    });
-  }
-  if (q.search !== undefined) {
-    const s = q.search.trim();
-    andClauses.push({
+    and.push({
       OR: [
         { sku: { contains: s, mode: "insensitive" } },
         { nameEn: { contains: s, mode: "insensitive" } },
@@ -83,10 +53,74 @@ export function buildPublicProductWhere(q: {
       ],
     });
   }
-  if (andClauses.length > 0) {
-    where.AND = andClauses;
+  if (q.vehicleId !== undefined) {
+    and.push({ fitments: { some: { vehicleId: q.vehicleId } } });
   }
-  return where;
+  if (q.chassisCode !== undefined) {
+    const cc = q.chassisCode.trim();
+    and.push({
+      fitments: {
+        some: {
+          vehicle: { chassisCode: { contains: cc, mode: "insensitive" } },
+        },
+      },
+    });
+  }
+  if (and.length === 0) {
+    return {};
+  }
+  if (and.length === 1) {
+    return and[0]!;
+  }
+  return { AND: and };
+}
+
+export function buildPublicProductWhere(q: {
+  categoryId?: number;
+  vehicleId?: number;
+  oemContains?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+}): Prisma.ProductWhereInput {
+  const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
+  if (q.categoryId !== undefined) {
+    and.push({ categoryId: q.categoryId });
+  }
+  if (q.vehicleId !== undefined) {
+    and.push({ fitments: { some: { vehicleId: q.vehicleId } } });
+  }
+  if (q.oemContains !== undefined) {
+    const o = q.oemContains.trim();
+    and.push({
+      oemNumber: { contains: o, mode: "insensitive" },
+    });
+  }
+  if (q.search !== undefined) {
+    const s = q.search.trim();
+    and.push({
+      OR: [
+        { sku: { contains: s, mode: "insensitive" } },
+        { nameEn: { contains: s, mode: "insensitive" } },
+        { nameAr: { contains: s, mode: "insensitive" } },
+        { oemNumber: { contains: s, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (q.minPrice !== undefined || q.maxPrice !== undefined) {
+    const priceFilter: Prisma.DecimalFilter = {};
+    if (q.minPrice !== undefined) {
+      priceFilter.gte = q.minPrice;
+    }
+    if (q.maxPrice !== undefined) {
+      priceFilter.lte = q.maxPrice;
+    }
+    and.push({ price: priceFilter });
+  }
+  if (and.length === 1) {
+    return and[0]!;
+  }
+  return { AND: and };
 }
 
 const adminListInclude = {
@@ -159,6 +193,7 @@ export async function createProduct(data: {
   descEn: string | null;
   descAr: string | null;
   price: Prisma.Decimal | number | string;
+  compareAtPrice: Prisma.Decimal | number | string | null;
   stockQuantity: number;
   isFeatured: boolean;
   isActive: boolean;
@@ -284,6 +319,33 @@ export async function replaceFitments(
   });
 }
 
+export async function mergeFitmentsFromSourceVehicleToTargetVehicle(
+  sourceVehicleId: number,
+  targetVehicleId: number,
+): Promise<{ fitmentsCreated: number }> {
+  const sources = await prisma.fitment.findMany({
+    where: { vehicleId: sourceVehicleId },
+    select: { productId: true },
+  });
+  const productIds = [...new Set(sources.map((s) => s.productId))];
+  if (productIds.length === 0) {
+    return { fitmentsCreated: 0 };
+  }
+  const existing = await prisma.fitment.findMany({
+    where: { vehicleId: targetVehicleId, productId: { in: productIds } },
+    select: { productId: true },
+  });
+  const have = new Set(existing.map((e) => e.productId));
+  const toAdd = productIds.filter((pid) => !have.has(pid));
+  if (toAdd.length === 0) {
+    return { fitmentsCreated: 0 };
+  }
+  await prisma.fitment.createMany({
+    data: toAdd.map((productId) => ({ productId, vehicleId: targetVehicleId })),
+  });
+  return { fitmentsCreated: toAdd.length };
+}
+
 export async function listVehicleIdsByIds(ids: number[]): Promise<Set<number>> {
   if (ids.length === 0) {
     return new Set();
@@ -323,13 +385,40 @@ export async function bulkUpdateProductStock(
   return results.reduce((acc, r) => acc + r.count, 0);
 }
 
+export type PublicProductSort =
+  | "featured"
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "name_en_asc"
+  | "name_ar_asc";
+
+export function orderByForPublicProductList(
+  sort: PublicProductSort | undefined,
+): Prisma.ProductOrderByWithRelationInput[] {
+  switch (sort) {
+    case "newest":
+      return [{ createdAt: "desc" }, { id: "desc" }];
+    case "price_asc":
+      return [{ price: "asc" }, { id: "asc" }];
+    case "price_desc":
+      return [{ price: "desc" }, { id: "desc" }];
+    case "name_en_asc":
+      return [{ nameEn: "asc" }, { id: "asc" }];
+    case "name_ar_asc":
+      return [{ nameAr: "asc" }, { id: "asc" }];
+    default:
+      return [{ isFeatured: "desc" }, { createdAt: "desc" }, { id: "desc" }];
+  }
+}
+
 export function listPublicProducts(
   where: Prisma.ProductWhereInput,
-  params: { skip: number; take: number },
+  params: { skip: number; take: number; sort?: PublicProductSort },
 ): Promise<ProductAdminListRow[]> {
   return prisma.product.findMany({
     where,
-    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    orderBy: orderByForPublicProductList(params.sort),
     skip: params.skip,
     take: params.take,
     include: publicListInclude,

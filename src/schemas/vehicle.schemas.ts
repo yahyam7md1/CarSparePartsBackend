@@ -48,4 +48,19 @@ export const vehicleListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   brand: z.string().trim().max(128).optional(),
+  q: z.string().trim().min(1).optional(),
+});
+
+export const mergeVehicleFitmentsBodySchema = z.object({
+  sourceVehicleId: z.coerce.number().int().positive(),
+  targetVehicleId: z.coerce.number().int().positive(),
+});
+
+export const vehicleFacetsSeriesQuerySchema = z.object({
+  brand: z.string().trim().min(1).max(128),
+});
+
+export const vehicleFacetsVehiclesQuerySchema = z.object({
+  brand: z.string().trim().min(1).max(128),
+  series: z.string().trim().min(1).max(128),
 });

@@ -1,4 +1,4 @@
-# **Technical Requirements Documentation: German Car Parts MVP**
+   # **Technical Requirements Documentation: German Car Parts MVP**
 
 **Date:** May 4, 2026  
  **Project Goal:** A high-speed, bilingual e-commerce platform for German car parts using WhatsApp as the primary checkout channel.

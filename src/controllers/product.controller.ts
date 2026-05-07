@@ -28,6 +28,8 @@ export async function listProductsAdmin(
       ...(q.limit !== undefined ? { limit: q.limit } : {}),
       ...(q.categoryId !== undefined ? { categoryId: q.categoryId } : {}),
       ...(q.brandName !== undefined ? { brandName: q.brandName } : {}),
+      ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
+      ...(q.chassisCode !== undefined ? { chassisCode: q.chassisCode } : {}),
       ...(q.isActive !== undefined ? { isActive: q.isActive } : {}),
       ...(q.isFeatured !== undefined ? { isFeatured: q.isFeatured } : {}),
       ...(q.q !== undefined ? { q: q.q } : {}),
@@ -81,6 +83,7 @@ export async function createProduct(
       ...(body.descEn !== undefined ? { descEn: body.descEn } : {}),
       ...(body.descAr !== undefined ? { descAr: body.descAr } : {}),
       price: body.price,
+      ...(body.compareAtPrice !== undefined ? { compareAtPrice: body.compareAtPrice } : {}),
       ...(body.stockQuantity !== undefined ? { stockQuantity: body.stockQuantity } : {}),
       ...(body.isFeatured !== undefined ? { isFeatured: body.isFeatured } : {}),
       ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
@@ -122,6 +125,7 @@ export async function updateProduct(
       ...(body.descEn !== undefined ? { descEn: body.descEn } : {}),
       ...(body.descAr !== undefined ? { descAr: body.descAr } : {}),
       ...(body.price !== undefined ? { price: body.price } : {}),
+      ...(body.compareAtPrice !== undefined ? { compareAtPrice: body.compareAtPrice } : {}),
       ...(body.stockQuantity !== undefined ? { stockQuantity: body.stockQuantity } : {}),
       ...(body.isFeatured !== undefined ? { isFeatured: body.isFeatured } : {}),
       ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
@@ -298,6 +302,9 @@ export async function listProductsPublic(
       ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
       ...(q.oem !== undefined ? { oem: q.oem } : {}),
       ...(q.q !== undefined ? { q: q.q } : {}),
+      ...(q.minPrice !== undefined ? { minPrice: q.minPrice } : {}),
+      ...(q.maxPrice !== undefined ? { maxPrice: q.maxPrice } : {}),
+      ...(q.sort !== undefined ? { sort: q.sort } : {}),
     });
     res.json(result);
   } catch (err) {
