@@ -75,7 +75,8 @@ export async function createProduct(
     const body = createProductBodySchema.parse(req.body);
     const product = await productService.createProduct({
       sku: body.sku,
-      ...(body.oemNumbers !== undefined ? { oemNumbers: body.oemNumbers } : {}),
+      ...(body.oemNumber !== undefined ? { oemNumber: body.oemNumber } : {}),
+      ...(body.movementClass !== undefined ? { movementClass: body.movementClass } : {}),
       categoryId: body.categoryId,
       brandName: body.brandName,
       nameEn: body.nameEn,
@@ -126,7 +127,8 @@ export async function updateProduct(
     const body = updateProductBodySchema.parse(req.body);
     const product = await productService.updateProduct(params.id, {
       ...(body.sku !== undefined ? { sku: body.sku } : {}),
-      ...(body.oemNumbers !== undefined ? { oemNumbers: body.oemNumbers } : {}),
+      ...(body.oemNumber !== undefined ? { oemNumber: body.oemNumber } : {}),
+      ...(body.movementClass !== undefined ? { movementClass: body.movementClass } : {}),
       ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
       ...(body.brandName !== undefined ? { brandName: body.brandName } : {}),
       ...(body.nameEn !== undefined ? { nameEn: body.nameEn } : {}),

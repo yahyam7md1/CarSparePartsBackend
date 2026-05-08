@@ -1,0 +1,2 @@
+ALTER TABLE "Product"
+ADD COLUMN "lowStockIgnored" BOOLEAN NOT NULL DEFAULT false;

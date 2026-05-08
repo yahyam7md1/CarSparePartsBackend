@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MovementClass {
+  slow
+  medium
+  fast
+}
+
 // 1. Admins Table
 model Admin {
   id           String   @id @default(uuid())
@@ -29,32 +35,34 @@ model Category {
 
 // 3. Products Table
 model Product {
-  id                        String         @id @default(uuid())
-  sku                       String         @unique
-  categoryId                Int
-  brandName                 String         // e.g., Bosch, Genuine
-  nameEn                    String
-  nameAr                    String
-  descEn                    String?
-  descAr                    String?
-  price                     Decimal        @db.Decimal(10, 2)
-  compareAtPrice            Decimal?       @db.Decimal(10, 2)
-  stockQuantity             Int            @default(0)
-  /// Fire “fast” (most urgent) stock alert when quantity is at or below this value.
-  stockAlertThresholdFast   Int?
-  /// Medium tier — should be ≥ fast when both are set.
-  stockAlertThresholdMedium Int?
-  /// Slow tier — should be ≥ medium when both are set.
-  stockAlertThresholdSlow   Int?
-  isFeatured                Boolean        @default(false)
-  isActive                  Boolean        @default(true)
-  dimensions                String?
-  weight                    Float?
-  manufacturedIn            String?
-  generation                String?
-  condition                 String         @default("new") // new, used
-  createdAt                 DateTime       @default(now())
-  updatedAt                 DateTime       @updatedAt
+  id             String         @id @default(uuid())
+  sku            String         @unique
+  oemNumber      String?        
+  movementClass  MovementClass  @default(medium)
+  categoryId     Int
+  brandName      String         // e.g., Bosch, Genuine
+  nameEn         String
+  nameAr         String
+  descEn         String?
+  descAr         String?
+  price          Decimal        @db.Decimal(10, 2)
+  compareAtPrice Decimal?       @db.Decimal(10, 2)
+  stockQuantity  Int            @default(0)
+  lowStockIgnored Boolean       @default(false)
+  isFeatured     Boolean        @default(false)
+  isActive       Boolean        @default(true)
+  dimensions     String?
+  weight         Float?
+  manufacturedIn String?
+  generation     String?
+  condition      String         @default("new") // new, used
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  category       Category       @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  fitments       Fitment[]      // Bridge to Vehicles
+  
 
   category Category      @relation(fields: [categoryId], references: [id])
   images   ProductImage[]

@@ -97,7 +97,8 @@ export async function getProductAdmin(id: string) {
 
 export async function createProduct(input: {
   sku: string;
-  oemNumbers?: string[];
+  oemNumber?: string | null;
+  movementClass?: "slow" | "medium" | "fast";
   categoryId: number;
   brandName: string;
   nameEn: string;
@@ -125,6 +126,8 @@ export async function createProduct(input: {
   try {
     const p = await productRepository.createProduct({
       sku: input.sku.trim(),
+      oemNumber: input.oemNumber ?? null,
+      movementClass: input.movementClass ?? "medium",
       categoryId: input.categoryId,
       brandName: input.brandName.trim(),
       nameEn: input.nameEn.trim(),
@@ -156,7 +159,8 @@ export async function updateProduct(
   id: string,
   input: {
     sku?: string;
-    oemNumbers?: string[];
+    oemNumber?: string | null;
+    movementClass?: "slow" | "medium" | "fast";
     categoryId?: number;
     brandName?: string;
     nameEn?: string;
@@ -187,6 +191,12 @@ export async function updateProduct(
   const data: Prisma.ProductUpdateInput = {};
   if (input.sku !== undefined) {
     data.sku = input.sku.trim();
+  }
+  if (input.oemNumber !== undefined) {
+    data.oemNumber = input.oemNumber;
+  }
+  if (input.movementClass !== undefined) {
+    data.movementClass = input.movementClass;
   }
   if (input.categoryId !== undefined) {
     data.category = { connect: { id: input.categoryId } };
