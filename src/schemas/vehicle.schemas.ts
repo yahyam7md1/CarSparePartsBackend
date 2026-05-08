@@ -17,6 +17,7 @@ export const createVehicleBodySchema = z.object({
   specifics: z.string().trim().min(1).max(128),
   chassisCode: z.string().trim().min(1).max(64),
   yearRange: z.string().trim().min(1).max(64),
+  generation: z.string().trim().max(128).nullable().optional(),
 });
 
 export const updateVehicleBodySchema = z
@@ -28,6 +29,7 @@ export const updateVehicleBodySchema = z
     specifics: z.string().trim().min(1).max(128).optional(),
     chassisCode: z.string().trim().min(1).max(64).optional(),
     yearRange: z.string().trim().min(1).max(64).optional(),
+    generation: z.string().trim().max(128).nullable().optional(),
   })
   .refine(
     (o) =>
@@ -37,7 +39,8 @@ export const updateVehicleBodySchema = z
       o.series !== undefined ||
       o.specifics !== undefined ||
       o.chassisCode !== undefined ||
-      o.yearRange !== undefined,
+      o.yearRange !== undefined ||
+      o.generation !== undefined,
     { message: "At least one field is required" },
   );
 

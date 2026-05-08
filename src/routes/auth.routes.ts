@@ -8,5 +8,8 @@ export function createAuthRouter(authEnv: AuthEnv): Router {
   router.post("/login", (req, res, next) => {
     void authController.login(req, res, next).catch(next);
   });
+  router.post("/logout", (req, res, next) => {
+    void authController.logout(req, res, next).catch(next);
+  });
   return router;
 }

@@ -20,6 +20,30 @@ const categorySelect = {
   nameAr: true,
 } as const;
 
+/** Trim, enforce max length, de-duplicate case-insensitively per product. */
+export function normalizeOemValues(raw: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of raw) {
+    const v = r.trim().slice(0, 200);
+    if (!v) continue;
+    const key = v.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out;
+}
+
+const oemsListArgs = {
+  orderBy: [{ sortOrder: "asc" as const }, { id: "asc" as const }],
+  select: {
+    id: true,
+    value: true,
+    sortOrder: true,
+  },
+};
+
 export function buildAdminProductWhere(q: {
   categoryId?: number;
   brandName?: string;
@@ -49,7 +73,7 @@ export function buildAdminProductWhere(q: {
         { sku: { contains: s, mode: "insensitive" } },
         { nameEn: { contains: s, mode: "insensitive" } },
         { nameAr: { contains: s, mode: "insensitive" } },
-        { oemNumber: { contains: s, mode: "insensitive" } },
+        { oems: { some: { value: { contains: s, mode: "insensitive" } } } },
       ],
     });
   }
@@ -93,7 +117,7 @@ export function buildPublicProductWhere(q: {
   if (q.oemContains !== undefined) {
     const o = q.oemContains.trim();
     and.push({
-      oemNumber: { contains: o, mode: "insensitive" },
+      oems: { some: { value: { contains: o, mode: "insensitive" } } },
     });
   }
   if (q.search !== undefined) {
@@ -103,7 +127,7 @@ export function buildPublicProductWhere(q: {
         { sku: { contains: s, mode: "insensitive" } },
         { nameEn: { contains: s, mode: "insensitive" } },
         { nameAr: { contains: s, mode: "insensitive" } },
-        { oemNumber: { contains: s, mode: "insensitive" } },
+        { oems: { some: { value: { contains: s, mode: "insensitive" } } } },
       ],
     });
   }
@@ -126,6 +150,10 @@ export function buildPublicProductWhere(q: {
 const adminListInclude = {
   category: { select: categorySelect },
   images: listImageArgs,
+  oems: oemsListArgs,
+  _count: {
+    select: { fitments: true },
+  },
 } satisfies Prisma.ProductInclude;
 
 const publicListInclude = adminListInclude;
@@ -140,6 +168,7 @@ const detailInclude = {
       vehicle: true,
     },
   },
+  oems: oemsListArgs,
 } satisfies Prisma.ProductInclude;
 
 export type ProductAdminListRow = Prisma.ProductGetPayload<{
@@ -185,7 +214,6 @@ export async function findActiveProductDetailById(
 
 export async function createProduct(data: {
   sku: string;
-  oemNumber: string | null;
   categoryId: number;
   brandName: string;
   nameEn: string;
@@ -202,21 +230,58 @@ export async function createProduct(data: {
   manufacturedIn: string | null;
   generation: string | null;
   condition: string;
+  stockAlertThresholdFast?: number | null;
+  stockAlertThresholdMedium?: number | null;
+  stockAlertThresholdSlow?: number | null;
+  oems?: string[];
 }): Promise<ProductDetail> {
+  const { oems, ...rest } = data;
+  const normalized = normalizeOemValues(oems ?? []);
   return prisma.product.create({
-    data,
+    data: {
+      ...rest,
+      ...(normalized.length > 0
+        ? {
+            oems: {
+              create: normalized.map((value, sortOrder) => ({
+                value,
+                sortOrder,
+              })),
+            },
+          }
+        : {}),
+    },
     include: detailInclude,
   });
 }
 
-export async function updateProduct(
+/** Apply scalar patch plus optional full OEM list replacement. */
+export async function applyProductUpdate(
   id: string,
   data: Prisma.ProductUpdateInput,
+  oemNumbers: string[] | undefined,
 ): Promise<ProductDetail> {
-  return prisma.product.update({
-    where: { id },
-    data,
-    include: detailInclude,
+  return prisma.$transaction(async (tx) => {
+    if (Object.keys(data).length > 0) {
+      await tx.product.update({ where: { id }, data });
+    }
+    if (oemNumbers !== undefined) {
+      const normalized = normalizeOemValues(oemNumbers);
+      await tx.productOem.deleteMany({ where: { productId: id } });
+      if (normalized.length > 0) {
+        await tx.productOem.createMany({
+          data: normalized.map((value, sortOrder) => ({
+            productId: id,
+            value,
+            sortOrder,
+          })),
+        });
+      }
+    }
+    return tx.product.findUniqueOrThrow({
+      where: { id },
+      include: detailInclude,
+    });
   });
 }
 

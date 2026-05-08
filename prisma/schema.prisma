@@ -29,34 +29,48 @@ model Category {
 
 // 3. Products Table
 model Product {
-  id             String         @id @default(uuid())
-  sku            String         @unique
-  oemNumber      String?        
-  categoryId     Int
-  brandName      String         // e.g., Bosch, Genuine
-  nameEn         String
-  nameAr         String
-  descEn         String?
-  descAr         String?
-  price          Decimal        @db.Decimal(10, 2)
-  compareAtPrice Decimal?       @db.Decimal(10, 2)
-  stockQuantity  Int            @default(0)
-  isFeatured     Boolean        @default(false)
-  isActive       Boolean        @default(true)
-  dimensions     String?
-  weight         Float?
-  manufacturedIn String?
-  generation     String?
-  condition      String         @default("new") // new, used
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  
-  category       Category       @relation(fields: [categoryId], references: [id])
-  images         ProductImage[]
-  fitments       Fitment[]      // Bridge to Vehicles
-  
+  id                        String         @id @default(uuid())
+  sku                       String         @unique
+  categoryId                Int
+  brandName                 String         // e.g., Bosch, Genuine
+  nameEn                    String
+  nameAr                    String
+  descEn                    String?
+  descAr                    String?
+  price                     Decimal        @db.Decimal(10, 2)
+  compareAtPrice            Decimal?       @db.Decimal(10, 2)
+  stockQuantity             Int            @default(0)
+  /// Fire “fast” (most urgent) stock alert when quantity is at or below this value.
+  stockAlertThresholdFast   Int?
+  /// Medium tier — should be ≥ fast when both are set.
+  stockAlertThresholdMedium Int?
+  /// Slow tier — should be ≥ medium when both are set.
+  stockAlertThresholdSlow   Int?
+  isFeatured                Boolean        @default(false)
+  isActive                  Boolean        @default(true)
+  dimensions                String?
+  weight                    Float?
+  manufacturedIn            String?
+  generation                String?
+  condition                 String         @default("new") // new, used
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
 
-  @@index([oemNumber])
+  category Category      @relation(fields: [categoryId], references: [id])
+  images   ProductImage[]
+  fitments Fitment[] // Bridge to Vehicles
+  oems     ProductOem[]
+}
+
+model ProductOem {
+  id        String  @id @default(uuid())
+  productId String
+  value     String  @db.VarChar(200)
+  sortOrder Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, value])
+  @@index([value])
 }
 
 // 4. Product Images Table
@@ -80,6 +94,7 @@ model Vehicle {
   specifics   String    // e.g., 530i
   chassisCode String    // e.g., E60
   yearRange   String    // e.g., 2004-2010
+  generation  String?   @db.VarChar(128)
   fitments    Fitment[] // Bridge to Products
 }
 

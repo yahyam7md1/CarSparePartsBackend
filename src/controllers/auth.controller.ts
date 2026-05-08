@@ -43,5 +43,13 @@ export function createAuthController(authEnv: AuthEnv) {
         next(err);
       }
     },
+
+    async logout(_req: Request, res: Response, next: NextFunction) {
+      try {
+        res.status(204).send();
+      } catch (err) {
+        next(err);
+      }
+    },
   };
 }

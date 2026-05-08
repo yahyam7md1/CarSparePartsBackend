@@ -49,6 +49,7 @@ export async function createVehicle(input: {
   specifics: string;
   chassisCode: string;
   yearRange: string;
+  generation?: string | null;
 }): Promise<Vehicle> {
   return vehicleRepository.createVehicle({
     nameEn: (input.nameEn ?? "").trim(),
@@ -58,6 +59,14 @@ export async function createVehicle(input: {
     specifics: input.specifics.trim(),
     chassisCode: input.chassisCode.trim(),
     yearRange: input.yearRange.trim(),
+    ...(input.generation !== undefined
+      ? {
+          generation:
+            input.generation === null || input.generation.trim() === ""
+              ? null
+              : input.generation.trim().slice(0, 128),
+        }
+      : {}),
   });
 }
 
@@ -71,6 +80,7 @@ export async function updateVehicle(
     specifics?: string;
     chassisCode?: string;
     yearRange?: string;
+    generation?: string | null;
   },
 ): Promise<Vehicle> {
   await getVehicle(id);
@@ -95,6 +105,12 @@ export async function updateVehicle(
   }
   if (input.yearRange !== undefined) {
     data.yearRange = input.yearRange.trim();
+  }
+  if (input.generation !== undefined) {
+    data.generation =
+      input.generation === null || input.generation.trim() === ""
+        ? null
+        : input.generation.trim().slice(0, 128);
   }
   return vehicleRepository.updateVehicle(id, data);
 }

@@ -2,6 +2,22 @@ import { z } from "zod";
 
 const conditionSchema = z.enum(["new", "used"]);
 
+const stockAlertThresholdSchema = z.union([z.number().int().min(0), z.null()]).optional();
+
+function refineProductStockAlerts(data: {
+  stockAlertThresholdFast?: number | null | undefined;
+  stockAlertThresholdMedium?: number | null | undefined;
+  stockAlertThresholdSlow?: number | null | undefined;
+}): boolean {
+  const f = data.stockAlertThresholdFast;
+  const m = data.stockAlertThresholdMedium;
+  const s = data.stockAlertThresholdSlow;
+  if (f != null && m != null && f > m) return false;
+  if (m != null && s != null && m > s) return false;
+  if (f != null && s != null && f > s) return false;
+  return true;
+}
+
 export const productIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
@@ -58,7 +74,6 @@ export const publicFeaturedQuerySchema = z.object({
 
 export const createProductBodySchema = z.object({
   sku: z.string().trim().min(1).max(200),
-  oemNumber: z.string().trim().max(200).nullable().optional(),
   categoryId: z.number().int().positive(),
   brandName: z.string().trim().min(1).max(200),
   nameEn: z.string().trim().min(1).max(500),
@@ -75,12 +90,25 @@ export const createProductBodySchema = z.object({
   manufacturedIn: z.string().trim().max(200).nullable().optional(),
   generation: z.string().trim().max(200).nullable().optional(),
   condition: conditionSchema.optional(),
-});
+  oemNumbers: z.array(z.string().trim().max(200)).max(50).optional(),
+  stockAlertThresholdFast: stockAlertThresholdSchema,
+  stockAlertThresholdMedium: stockAlertThresholdSchema,
+  stockAlertThresholdSlow: stockAlertThresholdSchema,
+})
+  .superRefine((data, ctx) => {
+    if (!refineProductStockAlerts(data)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Stock alert thresholds must satisfy fast ≤ medium ≤ slow (each tier when stock is at or below the value)",
+        path: ["stockAlertThresholdFast"],
+      });
+    }
+  });
 
 export const updateProductBodySchema = z
   .object({
     sku: z.string().trim().min(1).max(200).optional(),
-    oemNumber: z.string().trim().max(200).nullable().optional(),
     categoryId: z.number().int().positive().optional(),
     brandName: z.string().trim().min(1).max(200).optional(),
     nameEn: z.string().trim().min(1).max(500).optional(),
@@ -97,6 +125,21 @@ export const updateProductBodySchema = z
     manufacturedIn: z.string().trim().max(200).nullable().optional(),
     generation: z.string().trim().max(200).nullable().optional(),
     condition: conditionSchema.optional(),
+    /** When present, replaces all OEM numbers for the product (empty array clears). */
+    oemNumbers: z.array(z.string().trim().max(200)).max(50).optional(),
+    stockAlertThresholdFast: stockAlertThresholdSchema,
+    stockAlertThresholdMedium: stockAlertThresholdSchema,
+    stockAlertThresholdSlow: stockAlertThresholdSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (!refineProductStockAlerts(data)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Stock alert thresholds must satisfy fast ≤ medium ≤ slow (each tier when stock is at or below the value)",
+        path: ["stockAlertThresholdFast"],
+      });
+    }
   })
   .refine(
     (o) => Object.keys(o).length > 0,

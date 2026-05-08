@@ -18,10 +18,12 @@ function mapDetail(p: ProductDetail) {
 }
 
 function mapListRow(p: ProductAdminListRow) {
+  const { _count, ...rest } = p;
   return {
-    ...p,
+    ...rest,
     price: p.price.toString(),
     compareAtPrice: p.compareAtPrice != null ? p.compareAtPrice.toString() : null,
+    fitmentCount: _count.fitments,
   };
 }
 
@@ -95,7 +97,7 @@ export async function getProductAdmin(id: string) {
 
 export async function createProduct(input: {
   sku: string;
-  oemNumber?: string | null;
+  oemNumbers?: string[];
   categoryId: number;
   brandName: string;
   nameEn: string;
@@ -112,6 +114,9 @@ export async function createProduct(input: {
   manufacturedIn?: string | null;
   generation?: string | null;
   condition?: "new" | "used";
+  stockAlertThresholdFast?: number | null;
+  stockAlertThresholdMedium?: number | null;
+  stockAlertThresholdSlow?: number | null;
 }) {
   const cat = await categoryRepository.findCategoryById(input.categoryId);
   if (!cat) {
@@ -120,7 +125,6 @@ export async function createProduct(input: {
   try {
     const p = await productRepository.createProduct({
       sku: input.sku.trim(),
-      oemNumber: input.oemNumber ?? null,
       categoryId: input.categoryId,
       brandName: input.brandName.trim(),
       nameEn: input.nameEn.trim(),
@@ -137,6 +141,10 @@ export async function createProduct(input: {
       manufacturedIn: input.manufacturedIn ?? null,
       generation: input.generation ?? null,
       condition: input.condition ?? "new",
+      stockAlertThresholdFast: input.stockAlertThresholdFast ?? null,
+      stockAlertThresholdMedium: input.stockAlertThresholdMedium ?? null,
+      stockAlertThresholdSlow: input.stockAlertThresholdSlow ?? null,
+      oems: input.oemNumbers ?? [],
     });
     return mapDetail(p);
   } catch (err) {
@@ -148,7 +156,7 @@ export async function updateProduct(
   id: string,
   input: {
     sku?: string;
-    oemNumber?: string | null;
+    oemNumbers?: string[];
     categoryId?: number;
     brandName?: string;
     nameEn?: string;
@@ -165,6 +173,9 @@ export async function updateProduct(
     manufacturedIn?: string | null;
     generation?: string | null;
     condition?: "new" | "used";
+    stockAlertThresholdFast?: number | null;
+    stockAlertThresholdMedium?: number | null;
+    stockAlertThresholdSlow?: number | null;
   },
 ) {
   if (input.categoryId !== undefined) {
@@ -176,9 +187,6 @@ export async function updateProduct(
   const data: Prisma.ProductUpdateInput = {};
   if (input.sku !== undefined) {
     data.sku = input.sku.trim();
-  }
-  if (input.oemNumber !== undefined) {
-    data.oemNumber = input.oemNumber;
   }
   if (input.categoryId !== undefined) {
     data.category = { connect: { id: input.categoryId } };
@@ -228,8 +236,21 @@ export async function updateProduct(
   if (input.condition !== undefined) {
     data.condition = input.condition;
   }
+  if (input.stockAlertThresholdFast !== undefined) {
+    data.stockAlertThresholdFast = input.stockAlertThresholdFast;
+  }
+  if (input.stockAlertThresholdMedium !== undefined) {
+    data.stockAlertThresholdMedium = input.stockAlertThresholdMedium;
+  }
+  if (input.stockAlertThresholdSlow !== undefined) {
+    data.stockAlertThresholdSlow = input.stockAlertThresholdSlow;
+  }
   try {
-    const p = await productRepository.updateProduct(id, data);
+    const p = await productRepository.applyProductUpdate(
+      id,
+      data,
+      input.oemNumbers,
+    );
     return mapDetail(p);
   } catch (err) {
     handlePrismaProductError(err);

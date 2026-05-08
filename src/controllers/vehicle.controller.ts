@@ -100,6 +100,7 @@ export async function createVehicle(
       yearRange: body.yearRange,
       ...(body.nameEn !== undefined ? { nameEn: body.nameEn } : {}),
       ...(body.nameAr !== undefined ? { nameAr: body.nameAr } : {}),
+      ...(body.generation !== undefined ? { generation: body.generation } : {}),
     });
     res.status(201).json({ vehicle });
   } catch (err) {
@@ -127,6 +128,7 @@ export async function updateVehicle(
       ...(body.specifics !== undefined ? { specifics: body.specifics } : {}),
       ...(body.chassisCode !== undefined ? { chassisCode: body.chassisCode } : {}),
       ...(body.yearRange !== undefined ? { yearRange: body.yearRange } : {}),
+      ...(body.generation !== undefined ? { generation: body.generation } : {}),
     });
     res.json({ vehicle });
   } catch (err) {

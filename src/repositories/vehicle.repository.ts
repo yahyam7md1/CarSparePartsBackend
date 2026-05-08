@@ -22,6 +22,7 @@ function buildVehicleAdminWhere(params: { brand?: string; q?: string }): Prisma.
         { yearRange: { contains: s, mode: "insensitive" } },
         { nameEn: { contains: s, mode: "insensitive" } },
         { nameAr: { contains: s, mode: "insensitive" } },
+        { generation: { contains: s, mode: "insensitive" } },
       ],
     });
   }
@@ -79,6 +80,7 @@ export async function createVehicle(data: {
   specifics: string;
   chassisCode: string;
   yearRange: string;
+  generation?: string | null;
 }): Promise<Vehicle> {
   return prisma.vehicle.create({ data });
 }
@@ -93,6 +95,7 @@ export async function updateVehicle(
     specifics?: string;
     chassisCode?: string;
     yearRange?: string;
+    generation?: string | null;
   },
 ): Promise<Vehicle> {
   return prisma.vehicle.update({ where: { id }, data });

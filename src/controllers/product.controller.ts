@@ -75,7 +75,7 @@ export async function createProduct(
     const body = createProductBodySchema.parse(req.body);
     const product = await productService.createProduct({
       sku: body.sku,
-      ...(body.oemNumber !== undefined ? { oemNumber: body.oemNumber } : {}),
+      ...(body.oemNumbers !== undefined ? { oemNumbers: body.oemNumbers } : {}),
       categoryId: body.categoryId,
       brandName: body.brandName,
       nameEn: body.nameEn,
@@ -92,6 +92,15 @@ export async function createProduct(
       ...(body.manufacturedIn !== undefined ? { manufacturedIn: body.manufacturedIn } : {}),
       ...(body.generation !== undefined ? { generation: body.generation } : {}),
       ...(body.condition !== undefined ? { condition: body.condition } : {}),
+      ...(body.stockAlertThresholdFast !== undefined
+        ? { stockAlertThresholdFast: body.stockAlertThresholdFast }
+        : {}),
+      ...(body.stockAlertThresholdMedium !== undefined
+        ? { stockAlertThresholdMedium: body.stockAlertThresholdMedium }
+        : {}),
+      ...(body.stockAlertThresholdSlow !== undefined
+        ? { stockAlertThresholdSlow: body.stockAlertThresholdSlow }
+        : {}),
     });
     res.status(201).json({ product });
   } catch (err) {
@@ -117,7 +126,7 @@ export async function updateProduct(
     const body = updateProductBodySchema.parse(req.body);
     const product = await productService.updateProduct(params.id, {
       ...(body.sku !== undefined ? { sku: body.sku } : {}),
-      ...(body.oemNumber !== undefined ? { oemNumber: body.oemNumber } : {}),
+      ...(body.oemNumbers !== undefined ? { oemNumbers: body.oemNumbers } : {}),
       ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
       ...(body.brandName !== undefined ? { brandName: body.brandName } : {}),
       ...(body.nameEn !== undefined ? { nameEn: body.nameEn } : {}),
@@ -134,6 +143,15 @@ export async function updateProduct(
       ...(body.manufacturedIn !== undefined ? { manufacturedIn: body.manufacturedIn } : {}),
       ...(body.generation !== undefined ? { generation: body.generation } : {}),
       ...(body.condition !== undefined ? { condition: body.condition } : {}),
+      ...(body.stockAlertThresholdFast !== undefined
+        ? { stockAlertThresholdFast: body.stockAlertThresholdFast }
+        : {}),
+      ...(body.stockAlertThresholdMedium !== undefined
+        ? { stockAlertThresholdMedium: body.stockAlertThresholdMedium }
+        : {}),
+      ...(body.stockAlertThresholdSlow !== undefined
+        ? { stockAlertThresholdSlow: body.stockAlertThresholdSlow }
+        : {}),
     });
     res.json({ product });
   } catch (err) {
