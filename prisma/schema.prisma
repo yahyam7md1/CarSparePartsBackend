@@ -48,6 +48,7 @@ model Product {
   price          Decimal        @db.Decimal(10, 2)
   compareAtPrice Decimal?       @db.Decimal(10, 2)
   stockQuantity  Int            @default(0)
+  lowStockIgnored Boolean       @default(false)
   isFeatured     Boolean        @default(false)
   isActive       Boolean        @default(true)
   dimensions     String?

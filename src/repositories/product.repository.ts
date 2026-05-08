@@ -123,6 +123,38 @@ export function buildPublicProductWhere(q: {
   return { AND: and };
 }
 
+export function buildLowStockWhere(params?: {
+  excludeIgnored?: boolean;
+  search?: string;
+}): Prisma.ProductWhereInput {
+  const and: Prisma.ProductWhereInput[] = [
+    {
+      OR: [
+        { movementClass: "slow", stockQuantity: { lte: 0 } },
+        { movementClass: "medium", stockQuantity: { lt: 3 } },
+        { movementClass: "fast", stockQuantity: { lt: 7 } },
+      ],
+    },
+  ];
+  if (params?.excludeIgnored !== false) {
+    and.push({ lowStockIgnored: false });
+  }
+  if (params?.search !== undefined) {
+    const q = params.search.trim();
+    if (q.length > 0) {
+      and.push({
+        OR: [
+          { sku: { contains: q, mode: "insensitive" } },
+          { nameEn: { contains: q, mode: "insensitive" } },
+          { nameAr: { contains: q, mode: "insensitive" } },
+        ],
+      });
+    }
+  }
+  if (and.length === 1) return and[0]!;
+  return { AND: and };
+}
+
 const adminListInclude = {
   category: { select: categorySelect },
   images: listImageArgs,
@@ -153,7 +185,33 @@ export type ProductDetail = Prisma.ProductGetPayload<{
   include: typeof detailInclude;
 }>;
 
+export type LowStockAdminRow = Prisma.ProductGetPayload<{
+  select: {
+    id: true;
+    sku: true;
+    nameEn: true;
+    nameAr: true;
+    stockQuantity: true;
+    movementClass: true;
+    lowStockIgnored: true;
+  };
+}>;
+
+const lowStockSelect = {
+  id: true,
+  sku: true,
+  nameEn: true,
+  nameAr: true,
+  stockQuantity: true,
+  movementClass: true,
+  lowStockIgnored: true,
+} as const;
+
 export async function countProductsWhere(where: Prisma.ProductWhereInput): Promise<number> {
+  return prisma.product.count({ where });
+}
+
+export async function countLowStockProducts(where: Prisma.ProductWhereInput): Promise<number> {
   return prisma.product.count({ where });
 }
 
@@ -167,6 +225,19 @@ export async function listProductsWhere(
     skip: params.skip,
     take: params.take,
     include: adminListInclude,
+  });
+}
+
+export async function listLowStockProducts(
+  where: Prisma.ProductWhereInput,
+  params: { skip: number; take: number },
+): Promise<LowStockAdminRow[]> {
+  return prisma.product.findMany({
+    where,
+    orderBy: [{ stockQuantity: "asc" }, { updatedAt: "desc" }, { id: "desc" }],
+    skip: params.skip,
+    take: params.take,
+    select: lowStockSelect,
   });
 }
 
@@ -367,8 +438,19 @@ export async function updateProductStock(
 ): Promise<ProductDetail> {
   return prisma.product.update({
     where: { id },
-    data: { stockQuantity },
+    data: { stockQuantity, lowStockIgnored: false },
     include: detailInclude,
+  });
+}
+
+export async function setLowStockIgnored(
+  id: string,
+  lowStockIgnored: boolean,
+): Promise<LowStockAdminRow> {
+  return prisma.product.update({
+    where: { id },
+    data: { lowStockIgnored },
+    select: lowStockSelect,
   });
 }
 
@@ -382,7 +464,7 @@ export async function bulkUpdateProductStock(
     updates.map((u) =>
       prisma.product.updateMany({
         where: { id: u.id },
-        data: { stockQuantity: u.stockQuantity },
+        data: { stockQuantity: u.stockQuantity, lowStockIgnored: false },
       }),
     ),
   );

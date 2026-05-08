@@ -21,6 +21,12 @@ export function createAdminRouter(authEnv: AuthEnv): Router {
   router.get("/stats", (req, res, next) => {
     void statsController.getAdminStats(req, res, next).catch(next);
   });
+  router.get("/stats/low-stock", (req, res, next) => {
+    void statsController.listAdminLowStockRows(req, res, next).catch(next);
+  });
+  router.patch("/stats/low-stock/:id/ignore", (req, res, next) => {
+    void statsController.ignoreLowStockRow(req, res, next).catch(next);
+  });
 
   router.get("/categories", (req, res, next) => {
     void categoryController.listCategoriesAdmin(req, res, next).catch(next);
