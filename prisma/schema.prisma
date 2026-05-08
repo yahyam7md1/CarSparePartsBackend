@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MovementClass {
+  slow
+  medium
+  fast
+}
+
 // 1. Admins Table
 model Admin {
   id           String   @id @default(uuid())
@@ -32,6 +38,7 @@ model Product {
   id             String         @id @default(uuid())
   sku            String         @unique
   oemNumber      String?        
+  movementClass  MovementClass  @default(medium)
   categoryId     Int
   brandName      String         // e.g., Bosch, Genuine
   nameEn         String

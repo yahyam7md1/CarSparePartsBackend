@@ -1,4 +1,4 @@
-import type { Prisma, Vehicle } from "@prisma/client";
+import type { MovementClass, Prisma, Vehicle } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 
 const listImageArgs = {
@@ -189,6 +189,7 @@ export async function findActiveProductDetailById(
 export async function createProduct(data: {
   sku: string;
   oemNumber: string | null;
+  movementClass: MovementClass;
   categoryId: number;
   brandName: string;
   nameEn: string;

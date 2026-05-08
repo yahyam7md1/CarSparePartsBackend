@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const conditionSchema = z.enum(["new", "used"]);
+const movementClassSchema = z.enum(["slow", "medium", "fast"]);
 
 export const productIdParamsSchema = z.object({
   id: z.string().uuid(),
@@ -59,6 +60,7 @@ export const publicFeaturedQuerySchema = z.object({
 export const createProductBodySchema = z.object({
   sku: z.string().trim().min(1).max(200),
   oemNumber: z.string().trim().max(200).nullable().optional(),
+  movementClass: movementClassSchema.optional(),
   categoryId: z.number().int().positive(),
   brandName: z.string().trim().min(1).max(200),
   nameEn: z.string().trim().min(1).max(500),
@@ -81,6 +83,7 @@ export const updateProductBodySchema = z
   .object({
     sku: z.string().trim().min(1).max(200).optional(),
     oemNumber: z.string().trim().max(200).nullable().optional(),
+    movementClass: movementClassSchema.optional(),
     categoryId: z.number().int().positive().optional(),
     brandName: z.string().trim().min(1).max(200).optional(),
     nameEn: z.string().trim().min(1).max(500).optional(),

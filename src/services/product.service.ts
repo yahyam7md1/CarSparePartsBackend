@@ -98,6 +98,7 @@ export async function getProductAdmin(id: string) {
 export async function createProduct(input: {
   sku: string;
   oemNumber?: string | null;
+  movementClass?: "slow" | "medium" | "fast";
   categoryId: number;
   brandName: string;
   nameEn: string;
@@ -123,6 +124,7 @@ export async function createProduct(input: {
     const p = await productRepository.createProduct({
       sku: input.sku.trim(),
       oemNumber: input.oemNumber ?? null,
+      movementClass: input.movementClass ?? "medium",
       categoryId: input.categoryId,
       brandName: input.brandName.trim(),
       nameEn: input.nameEn.trim(),
@@ -151,6 +153,7 @@ export async function updateProduct(
   input: {
     sku?: string;
     oemNumber?: string | null;
+    movementClass?: "slow" | "medium" | "fast";
     categoryId?: number;
     brandName?: string;
     nameEn?: string;
@@ -181,6 +184,9 @@ export async function updateProduct(
   }
   if (input.oemNumber !== undefined) {
     data.oemNumber = input.oemNumber;
+  }
+  if (input.movementClass !== undefined) {
+    data.movementClass = input.movementClass;
   }
   if (input.categoryId !== undefined) {
     data.category = { connect: { id: input.categoryId } };
