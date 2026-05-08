@@ -1,8 +1,20 @@
 import * as productRepository from "../repositories/product.repository.js";
+import * as shopSettingsRepository from "../repositories/shopSettings.repository.js";
 import { HttpError } from "../utils/errors.js";
 
+async function lowStockWhereWithSettings(
+  extra?: Parameters<typeof productRepository.buildLowStockWhere>[0],
+) {
+  const row = await shopSettingsRepository.getShopSettings();
+  const lowStockThresholds = shopSettingsRepository.lowStockThresholdsFromRow(row);
+  return productRepository.buildLowStockWhere({
+    ...extra,
+    lowStockThresholds,
+  });
+}
+
 export async function getAdminStats() {
-  const lowStockWhere = productRepository.buildLowStockWhere({ excludeIgnored: true });
+  const lowStockWhere = await lowStockWhereWithSettings({ excludeIgnored: true });
   const [totalProducts, outOfStockCount, lowStockCount, featuredProductCount] =
     await Promise.all([
       productRepository.countProductsWhere({}),
@@ -22,7 +34,7 @@ export async function listAdminLowStockRows(q: { page?: number; limit?: number; 
   const limit = Math.min(Math.max(q.limit ?? 10, 1), 100);
   const page = Math.max(q.page ?? 1, 1);
   const skip = (page - 1) * limit;
-  const where = productRepository.buildLowStockWhere({
+  const where = await lowStockWhereWithSettings({
     excludeIgnored: true,
     ...(q.q !== undefined ? { search: q.q } : {}),
   });
@@ -38,7 +50,7 @@ export async function ignoreLowStockProduct(productId: string): Promise<void> {
   if (!existing) {
     throw new HttpError(404, "Product not found");
   }
-  const where = productRepository.buildLowStockWhere({
+  const where = await lowStockWhereWithSettings({
     excludeIgnored: false,
   });
   const lowStock = await productRepository.countLowStockProducts({

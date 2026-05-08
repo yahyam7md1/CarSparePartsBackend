@@ -21,6 +21,26 @@ model Admin {
   createdAt    DateTime @default(now())
 }
 
+/// Singleton shop configuration (row id must stay `1`).
+model ShopSettings {
+  id     Int @id @default(1)
+  /// Digits only (wa.me); null/empty → fall back to WHATSAPP_BUSINESS_PHONE env.
+  whatsappPhoneDigits      String? @db.VarChar(20)
+  whatsappGreetingNameEn   String? @db.VarChar(128)
+  whatsappGreetingNameAr   String? @db.VarChar(128)
+  /// Applied when creating a product if the API omits per-product thresholds.
+  defaultStockAlertFast    Int?
+  defaultStockAlertMedium  Int?
+  defaultStockAlertSlow    Int?
+  /// Admin low-stock list: slow SKU when stockQuantity is at or below this (usually 0).
+  lowStockSlowAtOrBelow Int @default(0)
+  /// Medium movement: low when stockQuantity is strictly below this value.
+  lowStockMediumBelow   Int @default(3)
+  /// Fast movement: low when stockQuantity is strictly below this value.
+  lowStockFastBelow     Int @default(7)
+  updatedAt             DateTime @updatedAt
+}
+
 // 2. Categories Table
 model Category {
   id        Int        @id @default(autoincrement())

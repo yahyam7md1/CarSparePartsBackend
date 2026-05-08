@@ -4,6 +4,7 @@ import type { AuthEnv } from "../config/env.js";
 import * as adminController from "../controllers/admin.controller.js";
 import * as categoryController from "../controllers/category.controller.js";
 import * as productController from "../controllers/product.controller.js";
+import * as shopSettingsController from "../controllers/shopSettings.controller.js";
 import * as statsController from "../controllers/stats.controller.js";
 import * as vehicleController from "../controllers/vehicle.controller.js";
 import { createRequireAuth } from "../middleware/auth.middleware.js";
@@ -16,6 +17,13 @@ export function createAdminRouter(authEnv: AuthEnv): Router {
 
   router.get("/me", (req, res, next) => {
     void adminController.me(req, res, next).catch(next);
+  });
+
+  router.get("/settings", (req, res, next) => {
+    void shopSettingsController.getShopSettings(req, res, next).catch(next);
+  });
+  router.patch("/settings", (req, res, next) => {
+    void shopSettingsController.patchShopSettings(req, res, next).catch(next);
   });
 
   router.get("/stats", (req, res, next) => {

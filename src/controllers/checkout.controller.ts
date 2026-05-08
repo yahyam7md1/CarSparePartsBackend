@@ -10,7 +10,7 @@ export async function postWhatsappCheckoutIntent(
 ) {
   try {
     const body = whatsappCheckoutBodySchema.parse(req.body);
-    const result = buildWhatsappCheckoutPayload(body);
+    const result = await buildWhatsappCheckoutPayload(body);
     res.status(200).json({
       message: result.message,
       waUrl: result.waUrl,

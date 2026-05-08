@@ -1,5 +1,6 @@
-import { getWhatsAppCheckoutEnv } from "../config/whatsapp.js";
+import { mergeWhatsAppCheckoutEnv } from "../config/whatsapp.js";
 import type { WhatsappCheckoutBody } from "../schemas/whatsapp.schemas.js";
+import * as shopSettingsRepository from "../repositories/shopSettings.repository.js";
 
 function formatMoney(amount: number): string {
   return amount.toFixed(2);
@@ -11,16 +12,18 @@ function lineTotal(quantity: number, unitPrice: number): number {
 
 /**
  * Builds bilingual WhatsApp order text and optional wa.me URL per technical_req.md §4.
+ * Merges configured shop phone/greetings with environment fallbacks.
  */
-export function buildWhatsappCheckoutPayload(
+export async function buildWhatsappCheckoutPayload(
   body: WhatsappCheckoutBody,
-): {
+): Promise<{
   message: string;
   waUrl: string | null;
   total: string;
   currencySymbol: string;
-} {
-  const env = getWhatsAppCheckoutEnv();
+}> {
+  const stored = await shopSettingsRepository.getShopSettings();
+  const env = mergeWhatsAppCheckoutEnv(stored);
   const currencySymbol = body.currencySymbol?.trim() || "$";
 
   const businessName =

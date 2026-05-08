@@ -5,6 +5,7 @@ import { ALLOWED_IMAGE_MIMETYPES, makeLargeWebp, makeThumbWebp } from "../lib/im
 import { prisma } from "../lib/prisma.js";
 import * as categoryRepository from "../repositories/category.repository.js";
 import * as productRepository from "../repositories/product.repository.js";
+import * as shopSettingsRepository from "../repositories/shopSettings.repository.js";
 import type { ProductAdminListRow, ProductDetail, PublicProductSort } from "../repositories/product.repository.js";
 import { publicUrlToStorageKey } from "../utils/product-storage-paths.js";
 import { HttpError } from "../utils/errors.js";
@@ -125,6 +126,7 @@ export async function createProduct(input: {
     throw new HttpError(400, "Category not found");
   }
   try {
+    const settings = await shopSettingsRepository.getShopSettings();
     const oemList: string[] = [...(input.oemNumbers ?? [])];
     const single = input.oemNumber?.trim();
     if (single) oemList.unshift(single);
@@ -147,9 +149,18 @@ export async function createProduct(input: {
       manufacturedIn: input.manufacturedIn ?? null,
       generation: input.generation ?? null,
       condition: input.condition ?? "new",
-      stockAlertThresholdFast: input.stockAlertThresholdFast ?? null,
-      stockAlertThresholdMedium: input.stockAlertThresholdMedium ?? null,
-      stockAlertThresholdSlow: input.stockAlertThresholdSlow ?? null,
+      stockAlertThresholdFast:
+        input.stockAlertThresholdFast !== undefined
+          ? input.stockAlertThresholdFast
+          : settings.defaultStockAlertFast,
+      stockAlertThresholdMedium:
+        input.stockAlertThresholdMedium !== undefined
+          ? input.stockAlertThresholdMedium
+          : settings.defaultStockAlertMedium,
+      stockAlertThresholdSlow:
+        input.stockAlertThresholdSlow !== undefined
+          ? input.stockAlertThresholdSlow
+          : settings.defaultStockAlertSlow,
       oems: oemList,
     });
     return mapDetail(p);

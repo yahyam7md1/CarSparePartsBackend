@@ -150,13 +150,23 @@ export function buildPublicProductWhere(q: {
 export function buildLowStockWhere(params?: {
   excludeIgnored?: boolean;
   search?: string;
+  lowStockThresholds?: {
+    slowAtOrBelow: number;
+    mediumBelow: number;
+    fastBelow: number;
+  };
 }): Prisma.ProductWhereInput {
+  const t = params?.lowStockThresholds ?? {
+    slowAtOrBelow: 0,
+    mediumBelow: 3,
+    fastBelow: 7,
+  };
   const and: Prisma.ProductWhereInput[] = [
     {
       OR: [
-        { movementClass: "slow", stockQuantity: { lte: 0 } },
-        { movementClass: "medium", stockQuantity: { lt: 3 } },
-        { movementClass: "fast", stockQuantity: { lt: 7 } },
+        { movementClass: "slow", stockQuantity: { lte: t.slowAtOrBelow } },
+        { movementClass: "medium", stockQuantity: { lt: t.mediumBelow } },
+        { movementClass: "fast", stockQuantity: { lt: t.fastBelow } },
       ],
     },
   ];
