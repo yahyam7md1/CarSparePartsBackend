@@ -126,6 +126,9 @@ export function buildPublicProductWhere(q: {
 const adminListInclude = {
   category: { select: categorySelect },
   images: listImageArgs,
+  _count: {
+    select: { fitments: true },
+  },
 } satisfies Prisma.ProductInclude;
 
 const publicListInclude = adminListInclude;

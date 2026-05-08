@@ -18,10 +18,12 @@ function mapDetail(p: ProductDetail) {
 }
 
 function mapListRow(p: ProductAdminListRow) {
+  const { _count, ...rest } = p;
   return {
-    ...p,
+    ...rest,
     price: p.price.toString(),
     compareAtPrice: p.compareAtPrice != null ? p.compareAtPrice.toString() : null,
+    fitmentCount: _count.fitments,
   };
 }
 
