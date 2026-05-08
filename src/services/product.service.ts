@@ -98,6 +98,7 @@ export async function getProductAdmin(id: string) {
 export async function createProduct(input: {
   sku: string;
   oemNumber?: string | null;
+  oemNumbers?: string[];
   movementClass?: "slow" | "medium" | "fast";
   categoryId: number;
   brandName: string;
@@ -124,9 +125,11 @@ export async function createProduct(input: {
     throw new HttpError(400, "Category not found");
   }
   try {
+    const oemList: string[] = [...(input.oemNumbers ?? [])];
+    const single = input.oemNumber?.trim();
+    if (single) oemList.unshift(single);
     const p = await productRepository.createProduct({
       sku: input.sku.trim(),
-      oemNumber: input.oemNumber ?? null,
       movementClass: input.movementClass ?? "medium",
       categoryId: input.categoryId,
       brandName: input.brandName.trim(),
@@ -147,7 +150,7 @@ export async function createProduct(input: {
       stockAlertThresholdFast: input.stockAlertThresholdFast ?? null,
       stockAlertThresholdMedium: input.stockAlertThresholdMedium ?? null,
       stockAlertThresholdSlow: input.stockAlertThresholdSlow ?? null,
-      oems: input.oemNumbers ?? [],
+      oems: oemList,
     });
     return mapDetail(p);
   } catch (err) {
@@ -160,6 +163,7 @@ export async function updateProduct(
   input: {
     sku?: string;
     oemNumber?: string | null;
+    oemNumbers?: string[];
     movementClass?: "slow" | "medium" | "fast";
     categoryId?: number;
     brandName?: string;
@@ -191,9 +195,6 @@ export async function updateProduct(
   const data: Prisma.ProductUpdateInput = {};
   if (input.sku !== undefined) {
     data.sku = input.sku.trim();
-  }
-  if (input.oemNumber !== undefined) {
-    data.oemNumber = input.oemNumber;
   }
   if (input.movementClass !== undefined) {
     data.movementClass = input.movementClass;
@@ -255,11 +256,21 @@ export async function updateProduct(
   if (input.stockAlertThresholdSlow !== undefined) {
     data.stockAlertThresholdSlow = input.stockAlertThresholdSlow;
   }
+  let oemPatch: string[] | undefined;
+  if (input.oemNumbers !== undefined) {
+    oemPatch = input.oemNumbers;
+  } else if (input.oemNumber !== undefined) {
+    oemPatch =
+      input.oemNumber === null || !String(input.oemNumber).trim()
+        ? []
+        : [String(input.oemNumber).trim()];
+  }
+
   try {
     const p = await productRepository.applyProductUpdate(
       id,
       data,
-      input.oemNumbers,
+      oemPatch,
     );
     return mapDetail(p);
   } catch (err) {

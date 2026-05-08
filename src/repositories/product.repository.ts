@@ -182,10 +182,7 @@ export function buildLowStockWhere(params?: {
 const adminListInclude = {
   category: { select: categorySelect },
   images: listImageArgs,
-<<<<<<< HEAD
   oems: oemsListArgs,
-=======
->>>>>>> 235f1e995701a33bb66be8af16f288e284d8ef7f
   _count: {
     select: { fitments: true },
   },
@@ -288,11 +285,7 @@ export async function findActiveProductDetailById(
 
 export async function createProduct(data: {
   sku: string;
-<<<<<<< HEAD
-=======
-  oemNumber: string | null;
   movementClass: MovementClass;
->>>>>>> 235f1e995701a33bb66be8af16f288e284d8ef7f
   categoryId: number;
   brandName: string;
   nameEn: string;

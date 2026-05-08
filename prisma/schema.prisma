@@ -35,36 +35,33 @@ model Category {
 
 // 3. Products Table
 model Product {
-  id             String         @id @default(uuid())
-  sku            String         @unique
-  oemNumber      String?        
-  movementClass  MovementClass  @default(medium)
-  categoryId     Int
-  brandName      String         // e.g., Bosch, Genuine
-  nameEn         String
-  nameAr         String
-  descEn         String?
-  descAr         String?
-  price          Decimal        @db.Decimal(10, 2)
-  compareAtPrice Decimal?       @db.Decimal(10, 2)
-  stockQuantity  Int            @default(0)
-  lowStockIgnored Boolean       @default(false)
-  isFeatured     Boolean        @default(false)
-  isActive       Boolean        @default(true)
-  dimensions     String?
-  weight         Float?
+  id            String         @id @default(uuid())
+  sku           String         @unique
+  movementClass MovementClass  @default(medium)
+  categoryId    Int
+  brandName     String // e.g., Bosch, Genuine
+  nameEn        String
+  nameAr        String
+  descEn        String?
+  descAr        String?
+  price         Decimal        @db.Decimal(10, 2)
+  compareAtPrice Decimal?      @db.Decimal(10, 2)
+  stockQuantity Int            @default(0)
+  lowStockIgnored Boolean      @default(false)
+  isFeatured    Boolean        @default(false)
+  isActive      Boolean        @default(true)
+  dimensions    String?
+  weight        Float?
   manufacturedIn String?
-  generation     String?
-  condition      String         @default("new") // new, used
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  
-  category       Category       @relation(fields: [categoryId], references: [id])
-  images         ProductImage[]
-  fitments       Fitment[]      // Bridge to Vehicles
-  
+  generation    String?
+  condition     String         @default("new") // new, used
+  stockAlertThresholdFast   Int?
+  stockAlertThresholdMedium Int?
+  stockAlertThresholdSlow   Int?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  category Category      @relation(fields: [categoryId], references: [id])
+  category Category       @relation(fields: [categoryId], references: [id])
   images   ProductImage[]
   fitments Fitment[] // Bridge to Vehicles
   oems     ProductOem[]

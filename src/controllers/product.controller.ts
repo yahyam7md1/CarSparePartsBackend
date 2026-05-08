@@ -76,6 +76,7 @@ export async function createProduct(
     const product = await productService.createProduct({
       sku: body.sku,
       ...(body.oemNumber !== undefined ? { oemNumber: body.oemNumber } : {}),
+      ...(body.oemNumbers !== undefined ? { oemNumbers: body.oemNumbers } : {}),
       ...(body.movementClass !== undefined ? { movementClass: body.movementClass } : {}),
       categoryId: body.categoryId,
       brandName: body.brandName,
@@ -128,6 +129,7 @@ export async function updateProduct(
     const product = await productService.updateProduct(params.id, {
       ...(body.sku !== undefined ? { sku: body.sku } : {}),
       ...(body.oemNumber !== undefined ? { oemNumber: body.oemNumber } : {}),
+      ...(body.oemNumbers !== undefined ? { oemNumbers: body.oemNumbers } : {}),
       ...(body.movementClass !== undefined ? { movementClass: body.movementClass } : {}),
       ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
       ...(body.brandName !== undefined ? { brandName: body.brandName } : {}),
