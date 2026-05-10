@@ -117,7 +117,7 @@ model Vehicle {
   brand       String    // e.g., BMW
   series      String    // e.g., 5 Series
   specifics   String    // e.g., 530i
-  chassisCode String    // e.g., E60
+  chassisCode String?   // e.g., E60
   yearRange   String    // e.g., 2004-2010
   generation  String?   @db.VarChar(128)
   fitments    Fitment[] // Bridge to Products

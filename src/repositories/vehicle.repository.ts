@@ -78,7 +78,7 @@ export async function createVehicle(data: {
   brand: string;
   series: string;
   specifics: string;
-  chassisCode: string;
+  chassisCode?: string | null;
   yearRange: string;
   generation?: string | null;
 }): Promise<Vehicle> {
@@ -93,7 +93,7 @@ export async function updateVehicle(
     brand?: string;
     series?: string;
     specifics?: string;
-    chassisCode?: string;
+    chassisCode?: string | null;
     yearRange?: string;
     generation?: string | null;
   },
@@ -131,7 +131,7 @@ export type VehicleFacetRow = {
   brand: string;
   series: string;
   specifics: string;
-  chassisCode: string;
+  chassisCode: string | null;
   yearRange: string;
   nameEn: string;
   nameAr: string;

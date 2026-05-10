@@ -15,7 +15,7 @@ export const createVehicleBodySchema = z.object({
   brand: z.string().trim().min(1).max(128),
   series: z.string().trim().min(1).max(128),
   specifics: z.string().trim().min(1).max(128),
-  chassisCode: z.string().trim().min(1).max(64),
+  chassisCode: z.string().trim().max(64).nullable().optional(),
   yearRange: z.string().trim().min(1).max(64),
   generation: z.string().trim().max(128).nullable().optional(),
 });
@@ -27,7 +27,7 @@ export const updateVehicleBodySchema = z
     brand: z.string().trim().min(1).max(128).optional(),
     series: z.string().trim().min(1).max(128).optional(),
     specifics: z.string().trim().min(1).max(128).optional(),
-    chassisCode: z.string().trim().min(1).max(64).optional(),
+    chassisCode: z.string().trim().max(64).nullable().optional(),
     yearRange: z.string().trim().min(1).max(64).optional(),
     generation: z.string().trim().max(128).nullable().optional(),
   })

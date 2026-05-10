@@ -47,17 +47,18 @@ export async function createVehicle(input: {
   brand: string;
   series: string;
   specifics: string;
-  chassisCode: string;
+  chassisCode?: string | null;
   yearRange: string;
   generation?: string | null;
 }): Promise<Vehicle> {
+  const rawChassis = input.chassisCode?.trim() ?? "";
   return vehicleRepository.createVehicle({
     nameEn: (input.nameEn ?? "").trim(),
     nameAr: (input.nameAr ?? "").trim(),
     brand: input.brand.trim(),
     series: input.series.trim(),
     specifics: input.specifics.trim(),
-    chassisCode: input.chassisCode.trim(),
+    chassisCode: rawChassis.length > 0 ? rawChassis : null,
     yearRange: input.yearRange.trim(),
     ...(input.generation !== undefined
       ? {
@@ -78,7 +79,7 @@ export async function updateVehicle(
     brand?: string;
     series?: string;
     specifics?: string;
-    chassisCode?: string;
+    chassisCode?: string | null;
     yearRange?: string;
     generation?: string | null;
   },
@@ -101,7 +102,8 @@ export async function updateVehicle(
     data.specifics = input.specifics.trim();
   }
   if (input.chassisCode !== undefined) {
-    data.chassisCode = input.chassisCode.trim();
+    const chassis = input.chassisCode?.trim() ?? "";
+    data.chassisCode = chassis.length > 0 ? chassis : null;
   }
   if (input.yearRange !== undefined) {
     data.yearRange = input.yearRange.trim();
