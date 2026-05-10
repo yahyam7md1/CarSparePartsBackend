@@ -48,6 +48,30 @@ function handlePrismaProductError(err: unknown): never {
   throw err;
 }
 
+function collectDescendantCategoryIds(
+  rootCategoryId: number,
+  categories: Array<{ id: number; parentId: number | null }>,
+): number[] {
+  const childrenByParent = new Map<number, number[]>();
+  for (const c of categories) {
+    if (c.parentId === null) continue;
+    const list = childrenByParent.get(c.parentId) ?? [];
+    list.push(c.id);
+    childrenByParent.set(c.parentId, list);
+  }
+
+  const visited = new Set<number>();
+  const stack = [rootCategoryId];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === undefined || visited.has(current)) continue;
+    visited.add(current);
+    const children = childrenByParent.get(current) ?? [];
+    for (const childId of children) stack.push(childId);
+  }
+  return [...visited];
+}
+
 export async function listProductsAdmin(q: {
   page?: number;
   limit?: number;
@@ -67,8 +91,13 @@ export async function listProductsAdmin(q: {
   const limit = Math.min(Math.max(q.limit ?? 50, 1), 200);
   const page = Math.max(q.page ?? 1, 1);
   const skip = (page - 1) * limit;
+  let categoryIds: number[] | undefined;
+  if (q.categoryId !== undefined) {
+    const categories = await categoryRepository.listAllCategories();
+    categoryIds = collectDescendantCategoryIds(q.categoryId, categories);
+  }
   const where = productRepository.buildAdminProductWhere({
-    ...(q.categoryId !== undefined ? { categoryId: q.categoryId } : {}),
+    ...(categoryIds !== undefined ? { categoryIds } : {}),
     ...(q.brandName !== undefined ? { brandName: q.brandName } : {}),
     ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
     ...(q.chassisCode !== undefined ? { chassisCode: q.chassisCode } : {}),

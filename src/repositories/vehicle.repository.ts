@@ -132,6 +132,7 @@ export type VehicleFacetRow = {
   series: string;
   specifics: string;
   chassisCode: string | null;
+  generation: string | null;
   yearRange: string;
   nameEn: string;
   nameAr: string;
@@ -150,10 +151,11 @@ export async function listVehiclesForFacets(brand: string, series: string): Prom
       series: true,
       specifics: true,
       chassisCode: true,
+      generation: true,
       yearRange: true,
       nameEn: true,
       nameAr: true,
     },
-    orderBy: [{ chassisCode: "asc" }, { id: "asc" }],
+    orderBy: [{ generation: "asc" }, { id: "asc" }],
   });
 }

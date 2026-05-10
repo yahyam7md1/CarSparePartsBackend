@@ -46,6 +46,7 @@ const oemsListArgs = {
 
 export function buildAdminProductWhere(q: {
   categoryId?: number;
+  categoryIds?: number[];
   brandName?: string;
   isActive?: boolean;
   isFeatured?: boolean;
@@ -54,6 +55,14 @@ export function buildAdminProductWhere(q: {
   chassisCode?: string;
 }): Prisma.ProductWhereInput {
   const and: Prisma.ProductWhereInput[] = [];
+  if (q.categoryIds !== undefined && q.categoryIds.length > 0) {
+    const ids = [...new Set(q.categoryIds)];
+    if (ids.length === 1) {
+      and.push({ categoryId: ids[0]! });
+    } else {
+      and.push({ categoryId: { in: ids } });
+    }
+  }
   if (q.categoryId !== undefined) {
     and.push({ categoryId: q.categoryId });
   }
