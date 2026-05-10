@@ -100,16 +100,34 @@ export function buildAdminProductWhere(q: {
 }
 
 export function buildPublicProductWhere(q: {
-  categoryId?: number;
+  categoryIds?: number[];
   vehicleId?: number;
   oemContains?: string;
   search?: string;
   minPrice?: number;
   maxPrice?: number;
+  brandNames?: string[];
 }): Prisma.ProductWhereInput {
   const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
-  if (q.categoryId !== undefined) {
-    and.push({ categoryId: q.categoryId });
+  if (q.categoryIds !== undefined && q.categoryIds.length > 0) {
+    const ids = [...new Set(q.categoryIds)];
+    if (ids.length === 1) {
+      and.push({ categoryId: ids[0]! });
+    } else {
+      and.push({ categoryId: { in: ids } });
+    }
+  }
+  if (q.brandNames !== undefined && q.brandNames.length > 0) {
+    const names = [...new Set(q.brandNames.map((b) => b.trim()).filter(Boolean))];
+    if (names.length === 1) {
+      and.push({ brandName: { equals: names[0]!, mode: "insensitive" } });
+    } else {
+      and.push({
+        OR: names.map((name) => ({
+          brandName: { equals: name, mode: "insensitive" as const },
+        })),
+      });
+    }
   }
   if (q.vehicleId !== undefined) {
     and.push({ fitments: { some: { vehicleId: q.vehicleId } } });

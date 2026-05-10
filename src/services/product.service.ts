@@ -448,25 +448,35 @@ export async function listProductsPublic(q: {
   page?: number;
   limit?: number;
   categoryId?: number;
+  categoryIds?: number[];
   categorySlug?: string;
   vehicleId?: number;
   oem?: string;
   q?: string;
+  brand?: string[];
   minPrice?: number;
   maxPrice?: number;
   sort?: PublicProductSort;
 }) {
-  let categoryId = q.categoryId;
+  let resolvedSingleCategoryId = q.categoryId;
   if (q.categorySlug !== undefined) {
     const cat = await categoryRepository.findCategoryBySlug(q.categorySlug.trim());
     if (!cat) {
       throw new HttpError(400, "Category not found");
     }
-    if (categoryId !== undefined && categoryId !== cat.id) {
+    if (resolvedSingleCategoryId !== undefined && resolvedSingleCategoryId !== cat.id) {
       throw new HttpError(400, "categoryId does not match categorySlug");
     }
-    categoryId = cat.id;
+    resolvedSingleCategoryId = cat.id;
   }
+  const categoryIdSet = new Set<number>();
+  for (const id of q.categoryIds ?? []) {
+    categoryIdSet.add(id);
+  }
+  if (resolvedSingleCategoryId !== undefined) {
+    categoryIdSet.add(resolvedSingleCategoryId);
+  }
+  const mergedCategoryIds = [...categoryIdSet];
   if (
     q.minPrice !== undefined &&
     q.maxPrice !== undefined &&
@@ -478,7 +488,8 @@ export async function listProductsPublic(q: {
   const page = Math.max(q.page ?? 1, 1);
   const skip = (page - 1) * limit;
   const where = productRepository.buildPublicProductWhere({
-    ...(categoryId !== undefined ? { categoryId } : {}),
+    ...(mergedCategoryIds.length > 0 ? { categoryIds: mergedCategoryIds } : {}),
+    ...(q.brand !== undefined && q.brand.length > 0 ? { brandNames: q.brand } : {}),
     ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
     ...(q.oem !== undefined ? { oemContains: q.oem } : {}),
     ...(q.q !== undefined ? { search: q.q } : {}),

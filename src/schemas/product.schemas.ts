@@ -55,14 +55,59 @@ export const publicProductSortSchema = z.enum([
   "name_ar_asc",
 ]);
 
+/** Express `req.query` may be a string, repeated keys, or comma-separated. */
+function queryToStringArray(val: unknown): string[] {
+  if (val === undefined || val === null || val === "") return [];
+  const raw = Array.isArray(val) ? val : [val];
+  const out: string[] = [];
+  for (const item of raw) {
+    for (const part of String(item).split(",")) {
+      const s = part.trim();
+      if (s) out.push(s);
+    }
+  }
+  return out;
+}
+
+function queryToPositiveIntArray(val: unknown): number[] {
+  if (val === undefined || val === null || val === "") return [];
+  const raw = Array.isArray(val) ? val : [val];
+  const out: number[] = [];
+  const seen = new Set<number>();
+  for (const item of raw) {
+    for (const part of String(item).split(",")) {
+      const n = Number.parseInt(part.trim(), 10);
+      if (Number.isFinite(n) && n > 0 && !seen.has(n)) {
+        seen.add(n);
+        out.push(n);
+      }
+    }
+  }
+  return out;
+}
+
 export const publicProductListQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().optional(),
   categoryId: z.coerce.number().int().positive().optional(),
+  /** Multi-select (PLP); merges with `categoryId` / `categorySlug` server-side. */
+  categoryIds: z.preprocess(
+    (v) => queryToPositiveIntArray(v).slice(0, 50),
+    z.array(z.number().int().positive()).max(50),
+  ).optional(),
   categorySlug: z.string().trim().min(1).optional(),
   vehicleId: z.coerce.number().int().positive().optional(),
   oem: z.string().trim().min(1).optional(),
   q: z.string().trim().min(1).optional(),
+  /** Matches `Product.brandName` (e.g. BMW, Mini); OR semantics when multiple. */
+  brand: z.preprocess(
+    (v) =>
+      queryToStringArray(v)
+        .map((s) => s.slice(0, 200))
+        .filter(Boolean)
+        .slice(0, 20),
+    z.array(z.string().trim().min(1).max(200)).max(20),
+  ).optional(),
   minPrice: z.coerce.number().finite().nonnegative().optional(),
   maxPrice: z.coerce.number().finite().nonnegative().optional(),
   sort: publicProductSortSchema.optional(),

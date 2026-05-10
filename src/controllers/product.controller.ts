@@ -320,10 +320,14 @@ export async function listProductsPublic(
       ...(q.page !== undefined ? { page: q.page } : {}),
       ...(q.limit !== undefined ? { limit: q.limit } : {}),
       ...(q.categoryId !== undefined ? { categoryId: q.categoryId } : {}),
+      ...(q.categoryIds !== undefined && q.categoryIds.length > 0
+        ? { categoryIds: q.categoryIds }
+        : {}),
       ...(q.categorySlug !== undefined ? { categorySlug: q.categorySlug } : {}),
       ...(q.vehicleId !== undefined ? { vehicleId: q.vehicleId } : {}),
       ...(q.oem !== undefined ? { oem: q.oem } : {}),
       ...(q.q !== undefined ? { q: q.q } : {}),
+      ...(q.brand !== undefined && q.brand.length > 0 ? { brand: q.brand } : {}),
       ...(q.minPrice !== undefined ? { minPrice: q.minPrice } : {}),
       ...(q.maxPrice !== undefined ? { maxPrice: q.maxPrice } : {}),
       ...(q.sort !== undefined ? { sort: q.sort } : {}),
