@@ -18,6 +18,7 @@ import { createAdminRouter } from "./routes/admin.routes.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
 import { createCatalogRouter } from "./routes/catalog.routes.js";
 import { createCheckoutRouter } from "./routes/checkout.routes.js";
+import { createShopPublicRouter } from "./routes/shopPublic.routes.js";
 
 //we are creating the express server
 const app = express();
@@ -44,6 +45,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", createAuthRouter(authEnv));
 app.use("/api", createCatalogRouter());
 app.use("/api", createCheckoutRouter());
+app.use("/api", createShopPublicRouter());
 app.use("/api/admin", createAdminRouter(authEnv));
 
 app.use(errorHandler);

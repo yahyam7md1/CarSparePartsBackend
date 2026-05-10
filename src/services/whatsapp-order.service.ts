@@ -55,14 +55,14 @@ export async function buildWhatsappCheckoutPayload(
 
   let message: string;
   if (body.locale === "en") {
-    const head = `Hello ${businessName}, I would like to order:\n`;
+    const head = `Hello, I would like to order:\n`;
     const mid = lines.join("\n");
     const tail = `\nTotal: ${currencySymbol}${totalStr}`;
     const notes =
       body.notes !== undefined && body.notes.length > 0 ? `\n${body.notes}` : "";
     message = head + mid + tail + notes;
   } else {
-    const head = `مرحباً ${businessName}، أود طلب المنتجات التالية:\n`;
+    const head = `مرحباً ، أود طلب المنتجات التالية:\n`;
     const mid = lines.join("\n");
     const tail = `\nالمجموع: ${totalStr}${currencySymbol}`;
     const notes =
