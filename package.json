@@ -13,6 +13,8 @@
     "db:migrate:first": "prisma migrate dev --name first",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "db:seed:demo": "node prisma/seed-demo-data.mjs",
+    "seed:demo": "node prisma/seed-demo-data.mjs",
     "db:studio": "prisma studio"
   },
   "prisma": {
