@@ -12,7 +12,11 @@ import express from "express";
 //we are importing the getAuthEnv to get the authentication environment variables
 import { getAuthEnv } from "./config/env.js";
 import { configureProductDeps } from "./config/runtime.js";
-import { createStorageAdapter, getStorageEnv } from "./config/storage.js";
+import {
+  createStorageAdapter,
+  getStorageEnv,
+  isLocalStorageDriver,
+} from "./config/storage.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { createAdminRouter } from "./routes/admin.routes.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
@@ -29,13 +33,17 @@ const authEnv = getAuthEnv();
 const storageEnv = getStorageEnv();
 const storageAdapter = createStorageAdapter(storageEnv);
 configureProductDeps({ storageEnv, storage: storageAdapter });
-mkdirSync(storageEnv.uploadRootDir, { recursive: true });
+if (isLocalStorageDriver()) {
+  mkdirSync(storageEnv.uploadRootDir, { recursive: true });
+}
 
 //we are using the cors middleware to handle the cors errors
 app.use(cors());
 //we are using the express.json middleware to parse the request body
 app.use(express.json());
-app.use(storageEnv.publicMountPath, express.static(storageEnv.uploadRootDir));
+if (isLocalStorageDriver()) {
+  app.use(storageEnv.publicMountPath, express.static(storageEnv.uploadRootDir));
+}
 //we are creating the health route to check if the server is running
 
 app.get("/health", (_req, res) => {

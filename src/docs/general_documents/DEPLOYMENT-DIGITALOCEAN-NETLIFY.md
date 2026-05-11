@@ -86,7 +86,7 @@ Do these **before** cutting production traffic:
 
 ## 4. DigitalOcean: Spaces (images)
 
-Today the backend only implements **`STORAGE_DRIVER=local`** (`createStorageAdapter` throws for anything else). **For production you must implement S3-compatible storage** (Spaces uses the S3 API).
+The backend supports **`STORAGE_DRIVER=local`** (default) and **`s3`** or **`spaces`** (DigitalOcean Spaces via the S3 API). With `s3`/`spaces`, uploads use **`@aws-sdk/client-s3`**, and `publicUrlForKey` returns **full CDN `https://…` URLs** stored in the database.
 
 ### 4.1 Behaviour to preserve
 
@@ -95,30 +95,18 @@ Today the backend only implements **`STORAGE_DRIVER=local`** (`createStorageAdap
 - **`publicUrlForKey`** for Spaces should return a **full HTTPS URL** (bucket CDN endpoint + key), e.g.  
   `https://carspareparts-media.nyc3.cdn.digitaloceanspaces.com/products/<id>/..._thumb.webp`
 
-### 4.2 Codebase changes (backend) — required
+### 4.2 Implementation (in repo)
 
-1. **Add dependency:** `@aws-sdk/client-s3` (works with DO Spaces when endpoint is set).
+- Dependency: **`@aws-sdk/client-s3`**
+- **`src/storage/s3.storage.ts`** — `PutObject`, `DeleteObject`, `publicUrlForKey`
+- **`src/config/storage.ts`** — `STORAGE_DRIVER`, S3 env vars; optional **`S3_OBJECT_ACL_PUBLIC_READ`** (`true`/`false`; use `false` if your bucket rejects per-object ACLs and you rely on a public-read bucket policy)
+- **`src/index.ts`** — `express.static` for `/uploads` only when **`local`**
 
-2. **New file** e.g. `src/storage/s3.storage.ts`:
+### 4.3 Migration / backfill
 
-   - `PutObject` with `Bucket`, `Key`, `Body`, `ContentType`, `ACL: "public-read"` **or** rely on bucket **public read** policy (preferred: bucket policy, not per-object ACL if possible).
-   - `DeleteObject` for the same `Key`.
-   - Keys should stay compatible with existing helpers under `src/utils/product-storage-paths.ts` (relative path without leading slash).
+Existing rows with **`/uploads/...`** in the database are **not** moved automatically. Either run a one-time copy + URL rewrite, re-upload in admin, or keep serving legacy paths until migrated.
 
-3. **Extend** `src/config/storage.ts`:
-
-   - Read env: e.g. `STORAGE_DRIVER=s3` or `spaces`.
-   - For S3: `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and **`PUBLIC_ASSET_BASE_URL`** (the **CDN** origin, no trailing slash) used to build URLs in `publicUrlForKey`.
-
-4. **Express static** (`index.ts`): For pure Spaces + CDN, you may **remove** `express.static` for uploads **if** no legacy paths must be served from disk. If you keep local driver for dev only, gate static on `STORAGE_DRIVER===local`.
-
-5. **Migration / backfill:** Existing rows with `/uploads/...` in the DB will **not** magically move. Plan either:
-
-   - one-time script copying objects to Spaces and rewriting URLs, or  
-   - re-upload images in admin, or  
-   - serve old paths via API proxy until backfill is done.
-
-### 4.3 Spaces CORS (browser uploads from admin UI)
+### 4.4 Spaces CORS (browser uploads from admin UI)
 
 If the **admin browser** ever uploads **directly** to Spaces via presigned URLs, configure **CORS** on the bucket for your Netlify origin. If uploads **always go through your API** (current multipart flow to Express), **Spaces CORS for the site origin is unnecessary**—only the API receives the file.
 
@@ -146,7 +134,7 @@ Link the PostgreSQL resource so App Platform injects **`DATABASE_URL`** (verify 
 
 ### 5.3 Ephemeral filesystem
 
-App Platform instances have **ephemeral disks**. **Do not** rely on `./uploads` in production once you move to Spaces. Until Spaces is implemented, uploaded images **will disappear** on redeploy.
+App Platform instances have **ephemeral disks**. With **`STORAGE_DRIVER=local`**, uploads **disappear** on redeploy. Use **`s3`** / **`spaces`** in production with Spaces.
 
 ---
 
@@ -213,17 +201,18 @@ Set it **only** if you **stop** using the proxy and call the API directly from t
 | `WHATSAPP_BUSINESS_PHONE` | Optional | Shop WhatsApp fallback (`src/config/whatsapp.ts`) |
 | `WHATSAPP_GREETING_NAME_EN` / `_AR` | Optional | Greeting names |
 | **Local storage (dev / legacy)** |
-| `STORAGE_DRIVER` | Optional | `local` default; production should move to `s3` after implementation |
+| `STORAGE_DRIVER` | Optional | `local` (default), or **`s3`** / **`spaces`** for DigitalOcean Spaces |
 | `UPLOAD_DIR` | With local | Filesystem root for uploads |
 | `PUBLIC_UPLOAD_MOUNT` | With local | Default `/uploads` |
-| **Spaces / S3 (after you implement adapter)** |
-| `STORAGE_DRIVER` | Yes (prod) | e.g. `s3` |
-| `S3_ENDPOINT` | Yes | e.g. `https://nyc3.digitaloceanspaces.com` |
-| `S3_REGION` | Yes | Region id (see DO docs; often same as datacenter) |
+| **Spaces / S3** |
+| `STORAGE_DRIVER` | Yes (prod media) | **`s3`** or **`spaces`** |
+| `S3_ENDPOINT` | Yes | e.g. `https://fra1.digitaloceanspaces.com` |
+| `S3_REGION` | Yes | e.g. `fra1` |
 | `S3_BUCKET` | Yes | Bucket name |
-| `S3_ACCESS_KEY_ID` | Yes | Spaces key |
-| `S3_SECRET_ACCESS_KEY` | Yes | Spaces secret |
-| `PUBLIC_ASSET_BASE_URL` | Yes | CDN base **without** trailing slash, e.g. `https://bucket.nyc3.cdn.digitaloceanspaces.com` |
+| `S3_ACCESS_KEY_ID` or `SPACES_KEY` | Yes | Use either naming convention |
+| `S3_SECRET_ACCESS_KEY` or `SPACES_SECRET` | Yes | |
+| `PUBLIC_ASSET_BASE_URL` | Yes | CDN base **without** trailing slash |
+| `S3_OBJECT_ACL_PUBLIC_READ` | Optional | Default `true` (`public-read` on upload); set `false` if the bucket disallows ACLs |
 
 **CORS:** If you do **not** use Netlify proxy, set explicit origins—**replace** `app.use(cors())` in `src/index.ts` with configuration that lists Netlify + future production domains.
 
